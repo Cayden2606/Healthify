@@ -1,6 +1,6 @@
 # healthify
 
-A new Flutter project.
+Your health and wellness journey starts here
 
 ## Getting Started
 
