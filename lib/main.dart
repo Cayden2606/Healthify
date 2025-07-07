@@ -1,10 +1,16 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 // import 'package:provider/provider.dart';
+// import 'firebase_options.dart';
 
 import 'package:healthify/screens/home.dart';
 import 'package:healthify/screens/settings.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      // options: DefaultFirebaseOptions.currentPlatform,
+      );
   runApp(const MyApp());
 }
 
@@ -16,7 +22,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   bool _darkMode = ThemeMode.system == ThemeMode.dark;
   void _toggleDarkMode(bool value) {
     setState(() => _darkMode = value);
@@ -29,8 +34,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    
-    HSLColor _userColorHSL = HSLColor.fromColor(_userColor);    
+    HSLColor _userColorHSL = HSLColor.fromColor(_userColor);
     Color _userLightThemeColor = _userColorHSL.toColor();
     Color _userDarkThemeColor = _userColorHSL.withLightness(0.5).toColor();
 
@@ -39,11 +43,10 @@ class _MyAppState extends State<MyApp> {
       routes: {
         '/': (context) => const HomeScreen(),
         '/settings': (context) => SettingsPage(
-          darkMode: _darkMode, 
-          toggleDarkMode: _toggleDarkMode,
-          userColor: _userColor,
-          setUserColor: _changeUserColor
-        ),
+            darkMode: _darkMode,
+            toggleDarkMode: _toggleDarkMode,
+            userColor: _userColor,
+            setUserColor: _changeUserColor),
       },
       theme: ThemeData(
         useMaterial3: true,
@@ -54,12 +57,25 @@ class _MyAppState extends State<MyApp> {
           bodyLarge: TextStyle(fontFamily: 'Product Sans', fontSize: 24),
           bodyMedium: TextStyle(fontFamily: 'Product Sans', fontSize: 20),
           bodySmall: TextStyle(fontFamily: 'Product Sans', fontSize: 16),
-          headlineLarge: TextStyle(fontFamily: 'Product Sans', fontWeight: FontWeight.w900, fontSize: 32),
-          headlineMedium: TextStyle(fontFamily: 'Product Sans', fontWeight: FontWeight.w700, fontSize: 20),
-          headlineSmall: TextStyle(fontFamily: 'Product Sans', fontWeight: FontWeight.w500, fontSize: 16),
+          headlineLarge: TextStyle(
+              fontFamily: 'Product Sans',
+              fontWeight: FontWeight.w900,
+              fontSize: 32),
+          headlineMedium: TextStyle(
+              fontFamily: 'Product Sans',
+              fontWeight: FontWeight.w700,
+              fontSize: 20),
+          headlineSmall: TextStyle(
+              fontFamily: 'Product Sans',
+              fontWeight: FontWeight.w500,
+              fontSize: 16),
         ),
         appBarTheme: const AppBarTheme(
-          titleTextStyle: TextStyle(fontFamily: 'Product Sans', color: Colors.black, fontSize: 20, fontWeight: FontWeight.w600),
+          titleTextStyle: TextStyle(
+              fontFamily: 'Product Sans',
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.w600),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
@@ -70,15 +86,34 @@ class _MyAppState extends State<MyApp> {
         fontFamily: 'Product Sans',
         colorSchemeSeed: _userDarkThemeColor,
         textTheme: const TextTheme(
-          bodyLarge: TextStyle(fontFamily: 'Product Sans', color: Colors.white, fontSize: 24),
-          bodyMedium: TextStyle(fontFamily: 'Product Sans', color: Colors.white, fontSize: 20),
-          bodySmall: TextStyle(fontFamily: 'Product Sans', color: Colors.white, fontSize: 16),
-          headlineLarge: TextStyle(fontFamily: 'Product Sans', color: Colors.white, fontWeight: FontWeight.w900, fontSize: 32),
-          headlineMedium: TextStyle(fontFamily: 'Product Sans', color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20),
-          headlineSmall: TextStyle(fontFamily: 'Product Sans', color: Colors.white, fontWeight: FontWeight.w500, fontSize: 16),
+          bodyLarge: TextStyle(
+              fontFamily: 'Product Sans', color: Colors.white, fontSize: 24),
+          bodyMedium: TextStyle(
+              fontFamily: 'Product Sans', color: Colors.white, fontSize: 20),
+          bodySmall: TextStyle(
+              fontFamily: 'Product Sans', color: Colors.white, fontSize: 16),
+          headlineLarge: TextStyle(
+              fontFamily: 'Product Sans',
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 32),
+          headlineMedium: TextStyle(
+              fontFamily: 'Product Sans',
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 20),
+          headlineSmall: TextStyle(
+              fontFamily: 'Product Sans',
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              fontSize: 16),
         ),
         appBarTheme: const AppBarTheme(
-          titleTextStyle: TextStyle(fontFamily: 'Product Sans', color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
+          titleTextStyle: TextStyle(
+              fontFamily: 'Product Sans',
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
