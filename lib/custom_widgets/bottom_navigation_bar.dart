@@ -16,6 +16,14 @@ class CustomBottomNavigationBar extends StatelessWidget {
           label: 'Home',
         ),
         NavigationDestination(
+          label: 'Clinics',
+          icon: Icon(Icons.local_hospital),
+        ),
+        NavigationDestination(
+          label: 'User',
+          icon: Icon(Icons.person),
+        ),
+        NavigationDestination(
           icon: Icon(Icons.settings),
           label: 'Settings',
         ),
@@ -23,10 +31,16 @@ class CustomBottomNavigationBar extends StatelessWidget {
       onDestinationSelected: (int index) {
         switch (index) {
           case 0:
-            Navigator.pushNamed(context, '/');
+            Navigator.pushReplacementNamed(context, '/home');
             break;
           case 1:
-            Navigator.pushNamed(context, '/settings');
+            Navigator.pushReplacementNamed(context, '/clinics');
+            break;
+          case 2:
+            Navigator.pushReplacementNamed(context, '/user');
+            break;
+          case 3:
+            Navigator.pushReplacementNamed(context, '/settings');
             break;
         }
       },

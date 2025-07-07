@@ -1,16 +1,21 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 // import 'package:provider/provider.dart';
-// import 'firebase_options.dart';
+import 'firebase_options.dart';
 
 import 'package:healthify/screens/home.dart';
 import 'package:healthify/screens/settings.dart';
 
+// ms tans files
+import 'package:healthify/tempscreens/login_screen.dart';
+import 'package:healthify/tempscreens/update_app_user_screen.dart';
+import 'package:healthify/tempscreens/clinics_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-      // options: DefaultFirebaseOptions.currentPlatform,
-      );
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -41,7 +46,10 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       initialRoute: '/',
       routes: {
-        '/': (context) => const HomeScreen(),
+        '/': (context) => const LoginScreen(),
+        '/home': (context) => HomeScreen(),
+        '/clinics': (context) => const ClinicsScreen(),
+        '/user': (context) => const UpdateAppUserScreen(),
         '/settings': (context) => SettingsPage(
             darkMode: _darkMode,
             toggleDarkMode: _toggleDarkMode,

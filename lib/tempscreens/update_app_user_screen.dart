@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../models/app_user.dart';
-import '../widgets/navigation_bar.dart';
+import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
 import '../utilities/firebase_calls.dart';
 
 class UpdateAppUserScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: MyBottomNavigationBar(selectedIndexNavBar: 2),
+      bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 2),
       body: SafeArea(
         child: SingleChildScrollView(
           child: StreamBuilder<QuerySnapshot>(

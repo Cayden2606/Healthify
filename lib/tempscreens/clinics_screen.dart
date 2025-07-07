@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
 
 import '../models/clinic.dart';
-import '../widgets/navigation_bar.dart';
 
 class ClinicsScreen extends StatefulWidget {
   const ClinicsScreen({Key? key}) : super(key: key);
@@ -24,14 +24,17 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: MyBottomNavigationBar(selectedIndexNavBar: 1),
-      body: Column(
-        children: [
-          //TODO Dropdown widget for user to select region
-          //TODO FutureBuilder to get clinics in selected region
-          //TODO Implement onTap for clinic > shows AddApptScreen() in bottom sheet
-          //TODO Adds appointment to firebase with userid, userName, point_id, clinicName, date and time
-        ],
+      bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 1),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Text("this is an empty page pls read the comments in the code")
+            //TODO Dropdown widget for user to select region
+            //TODO FutureBuilder to get clinics in selected region
+            //TODO Implement onTap for clinic > shows AddApptScreen() in bottom sheet
+            //TODO Adds appointment to firebase with userid, userName, point_id, clinicName, date and time
+          ],
+        ),
       ),
     );
   }

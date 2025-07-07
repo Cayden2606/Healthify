@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../utilities/firebase_calls.dart';
-import '../widgets/navigation_bar.dart';
+import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: MyBottomNavigationBar(selectedIndexNavBar: 0),
+      bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 0),
       body: Column(
         children: [
           Text('Welcome ${appUser.name}'),
