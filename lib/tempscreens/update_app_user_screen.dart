@@ -15,6 +15,9 @@ class UpdateAppUserScreen extends StatefulWidget {
 class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
   //TODO add contact, age, gender throughout this screen
   TextEditingController nameController = TextEditingController();
+  TextEditingController contactController = TextEditingController();
+  TextEditingController ageController = TextEditingController();
+  TextEditingController genderController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +33,10 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
               if (snapshot.hasData) {
                 if (snapshot.data!.docs.isNotEmpty) {
                   QueryDocumentSnapshot doc = snapshot.data!.docs[0];
-                  nameController.text = doc.get('name');
+                  nameController.text = doc.get('name') ?? '';
+                  contactController.text = doc.get('contact') ?? '';
+                  ageController.text = doc.get('age') ?? '';
+                  genderController.text = doc.get('gender') ?? '';
                 }
               }
               return Column(
@@ -45,6 +51,21 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                     decoration: const InputDecoration(labelText: 'Name'),
                     controller: nameController,
                   ),
+                  TextField(
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(labelText: 'Contact'),
+                    controller: contactController,
+                  ),
+                  TextField(
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(labelText: 'Age'),
+                    controller: ageController,
+                  ),
+                  TextField(
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(labelText: 'Gender'),
+                    controller: genderController,
+                  ),
                   ElevatedButton(
                     child: const Text('Save'),
                     onPressed: () async {
@@ -52,6 +73,9 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                         name: nameController.text,
                         email: auth.currentUser?.email ?? "",
                         userid: auth.currentUser?.uid ?? "",
+                        contact: contactController.text,
+                        age: ageController.text,
+                        gender: genderController.text,
                       );
                       await FirebaseCalls().updateAppUser(appUser);
                       Navigator.pushReplacementNamed(context, '/home');
