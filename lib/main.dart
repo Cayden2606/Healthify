@@ -7,9 +7,9 @@ import 'package:healthify/screens/home.dart';
 import 'package:healthify/screens/settings.dart';
 
 // ms tans files
-import 'package:healthify/tempscreens/login_screen.dart';
-import 'package:healthify/tempscreens/update_app_user_screen.dart';
-import 'package:healthify/tempscreens/clinics_screen.dart';
+import 'package:healthify/screens/login_screen.dart';
+import 'package:healthify/screens/update_app_user_screen.dart';
+import 'package:healthify/screens/clinics_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

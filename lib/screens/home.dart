@@ -10,27 +10,23 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      bottom: false,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Home'),
-          actions: [
-            IconButton(
-              onPressed: () {
-                auth.signOut();
-                Navigator.pushReplacementNamed(context, '/');
-              },
-              icon: const Icon(Icons.logout),
+        bottom: false,
+        child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Home'),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    auth.signOut();
+                    Navigator.pushReplacementNamed(context, '/');
+                  },
+                  icon: const Icon(Icons.logout),
+                ),
+              ],
             ),
-          ],
-        ),
-        body: Center(
-          child: Text(
-            'this is the home screen',
-          ),
-        ),
-        bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 0)
-      )
-    );
+            body: Center(
+              child: Text('Welcome ${appUser.name}'),
+            ),
+            bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 0)));
   }
 }
