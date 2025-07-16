@@ -29,33 +29,31 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     String baseURL = 'https://api.geoapify.com/v2/places';
 
     Map<String, String> requestHeaders = {
-      'apiKey': await dotenv.env['GEOAPIFY_API_KEY']!
     };
 
     Map<String, String> queryParams = {
       "categories": "healthcare.clinic_or_praxis",
       "filter": "place:5164e2bd2f5cfb594059cd6bad0dfe09f63ff00101f901a1773a0000000000c002099203094e6f72746865617374",
-      "limit": "20"
+      "limit": "20",
+      'apiKey': await dotenv.env['GEOAPIFY_API_KEY']!
     };
 
     String queryString = Uri(queryParameters: queryParams).query;
     final response = await http.get(
       Uri.parse(baseURL + '?' + queryString),
-      headers: requestHeaders,
+      // headers: requestHeaders,
     );
 
     if (response.statusCode == 200) {
       // get json list
-      List<dynamic> jsonList = jsonDecode(response.body)["results"] as List<dynamic>;
-
-      print(response.body);
+      List<dynamic> jsonList = jsonDecode(response.body)["features"] as List<dynamic>;
 
       // convert to list of movies
-      // List<Movie> moviesList = jsonList.map(
-      //   (json) => Movie.fromJson(json)
-      // ).toList();
+      List<Clinic> clinicsList = jsonList.map(
+        (json) => Clinic.fromJson(json)
+      ).toList();
       
-      return jsonList;
+      return clinicsList;
     } else {
       throw Exception('Failed to load');
     }

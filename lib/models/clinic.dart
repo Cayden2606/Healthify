@@ -20,13 +20,13 @@ class Clinic {
   //TODO implement Clinic.fromJson
   factory Clinic.fromJson(Map<String, dynamic> json) {
     return Clinic(
-      name: json['name'],
-      address: json['address_line2'],
-      website: json['website'] ?? '',
-      phone: json['contact']?['phone'] ?? '',
-      email: json['contact']?['email'] ?? '',
-      opening_hours: json['opening_hours'] ?? '',
-      place_id: json['place_id'],
+      name: json["properties"]['name'],
+      address: json["properties"]['address_line2'],
+      website: json["properties"]['website'] ?? '',
+      phone: json["properties"]['contact']?['phone'] ?? '',
+      email: json["properties"]['contact']?['email'] ?? '',
+      opening_hours: json["properties"]['opening_hours'] ?? '',
+      place_id: json["properties"]['place_id'],
     );
   }
 }
