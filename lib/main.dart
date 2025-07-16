@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 
 import 'package:healthify/screens/home.dart';
 import 'package:healthify/screens/settings.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // ms tans files
 import 'package:healthify/screens/login_screen.dart';
@@ -16,6 +17,9 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  await dotenv.load(fileName: ".env");
+  
   runApp(const MyApp());
 }
 
