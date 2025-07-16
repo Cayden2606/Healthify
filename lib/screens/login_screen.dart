@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 } else if (snapshot2.hasError) {
                   return Text('${snapshot2.error}');
                 }
-                return const CircularProgressIndicator();
+                return Center(child: const CircularProgressIndicator());
               },
             );
           }
