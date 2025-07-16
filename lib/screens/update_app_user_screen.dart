@@ -26,8 +26,13 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
       appBar: AppBar(
         title: const Text(
           'Update Profile',
-          textAlign: TextAlign.center,
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 0, 20, 0),
+            child: ElevatedButton(onPressed: () {}, child: Text("Save")),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -46,42 +51,73 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                 }
               }
               return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  TextField(
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                    controller: nameController,
-                  ),
-                  TextField(
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(labelText: 'Contact'),
-                    controller: contactController,
-                  ),
-                  TextField(
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(labelText: 'Age'),
-                    controller: ageController,
-                  ),
-                  TextField(
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(labelText: 'Gender'),
-                    controller: genderController,
-                  ),
-                  ElevatedButton(
-                    child: const Text('Save'),
-                    onPressed: () async {
-                      appUser = AppUser(
-                        name: nameController.text,
-                        email: auth.currentUser?.email ?? "",
-                        userid: auth.currentUser?.uid ?? "",
-                        contact: contactController.text,
-                        age: ageController.text,
-                        gender: genderController.text,
-                      );
-                      await FirebaseCalls().updateAppUser(appUser);
-                      Navigator.pushReplacementNamed(context, '/home');
-                    },
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(36, 0, 36, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                          child: TextField(
+                            textAlign: TextAlign.left,
+                            decoration: const InputDecoration(
+                              labelText: 'Name',
+                              border: OutlineInputBorder(),
+                            ),
+                            controller: nameController,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                          child: TextField(
+                            textAlign: TextAlign.left,
+                            decoration: const InputDecoration(
+                              labelText: 'Contact',
+                              border: OutlineInputBorder(),
+                            ),
+                            controller: contactController,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                          child: TextField(
+                            textAlign: TextAlign.left,
+                            decoration: const InputDecoration(
+                              labelText: 'Age',
+                              border: OutlineInputBorder(),
+                            ),
+                            controller: ageController,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                          child: TextField(
+                            textAlign: TextAlign.left,
+                            decoration: const InputDecoration(
+                              labelText: 'Gender',
+                              border: OutlineInputBorder(),
+                            ),
+                            controller: genderController,
+                          ),
+                        ),
+                        ElevatedButton(
+                          child: const Text('Save'),
+                          onPressed: () async {
+                            appUser = AppUser(
+                              name: nameController.text,
+                              email: auth.currentUser?.email ?? "",
+                              userid: auth.currentUser?.uid ?? "",
+                              contact: contactController.text,
+                              age: ageController.text,
+                              gender: genderController.text,
+                            );
+                            await FirebaseCalls().updateAppUser(appUser);
+                            Navigator.pushReplacementNamed(context, '/home');
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               );
