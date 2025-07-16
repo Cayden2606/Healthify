@@ -23,6 +23,12 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 2),
+      appBar: AppBar(
+        title: const Text(
+          'Update Profile',
+          textAlign: TextAlign.center,
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: StreamBuilder<QuerySnapshot>(
@@ -42,10 +48,6 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const Text(
-                    'Update App User',
-                    textAlign: TextAlign.center,
-                  ),
                   TextField(
                     textAlign: TextAlign.center,
                     decoration: const InputDecoration(labelText: 'Name'),
