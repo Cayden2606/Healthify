@@ -49,11 +49,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
       List<dynamic> jsonList = jsonDecode(response.body)["features"] as List<dynamic>;
 
       // convert to list of movies
-      // List<Movie> moviesList = jsonList.map(
-      //   (json) => Movie.fromJson(json)
-      // ).toList();
+      List<Clinic> clinicsList = jsonList.map(
+        (json) => Clinic.fromJson(json)
+      ).toList();
       
-      return jsonList;
+      return clinicsList;
     } else {
       throw Exception('Failed to load');
     }
