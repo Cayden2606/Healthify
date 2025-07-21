@@ -21,7 +21,11 @@ class _LoginScreenState extends State<LoginScreen> {
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.userChanges(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData) {
             return SignInScreen(
               providers: [
                 EmailAuthProvider(),
@@ -32,7 +36,11 @@ class _LoginScreenState extends State<LoginScreen> {
             return FutureBuilder<AppUser>(
               future: FirebaseCalls().getAppUser(snapshot.data!.uid),
               builder: (context, snapshot2) {
-                if (snapshot2.hasData) {
+                if (snapshot2.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot2.hasError) {
+                  return Center(child: Text('Error: ${snapshot2.error}'));
+                } else if (snapshot2.hasData) {
                   if (newUser) {
                     return const UpdateAppUserScreen();
                   } else {

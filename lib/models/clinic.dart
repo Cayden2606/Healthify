@@ -23,7 +23,7 @@ class Clinic {
       name: json["properties"]['name'],
       address: json["properties"]['address_line2'],
       website: json["properties"]['website'] ?? '',
-      phone: json["properties"]['contact']?['phone'] ?? '',
+      phone: (json["properties"]['contact']?['phone'] ?? '').toString(),
       email: json["properties"]['contact']?['email'] ?? '',
       opening_hours: json["properties"]['opening_hours'] ?? '',
       place_id: json["properties"]['place_id'],
