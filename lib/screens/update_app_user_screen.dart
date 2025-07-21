@@ -26,6 +26,8 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ThemeData theme = Theme.of(context);
+
     return Scaffold(
       bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 2),
       appBar: AppBar(
@@ -78,7 +80,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                         () {}, // TODO: Add a way for user to upload their own images
                     child: Text(
                       "Add picture",
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: theme.textTheme.headlineSmall,
                     ),
                   ),
                   SizedBox(
@@ -92,7 +94,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
                           child: TextField(
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            style: theme.textTheme.headlineSmall,
                             textAlign: TextAlign.left,
                             decoration: const InputDecoration(
                               labelText: 'First Name',
@@ -104,7 +106,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
                           child: TextField(
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            style: theme.textTheme.headlineSmall,
                             textAlign: TextAlign.left,
                             decoration: const InputDecoration(
                               labelText: 'Last Name',
@@ -116,10 +118,10 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
                           child: PhoneInput(
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            style: theme.textTheme.headlineSmall,
                             controller: phoneController,
                             defaultCountry: IsoCode.SG,
-                            flagShape: BoxShape.circle,
+                            flagShape: BoxShape.rectangle,
                             flagSize: 20,
                             decoration: const InputDecoration(
                               labelText: 'Phone (Mobile)',
@@ -130,7 +132,12 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                               PhoneValidator.valid(),
                             ]),
                             countrySelectorNavigator:
-                                const CountrySelectorNavigator.searchDelegate(),
+                                CountrySelectorNavigator.searchDelegate(
+                                    countryNameStyle:
+                                        theme.textTheme.headlineSmall,
+                                    countryCodeStyle:
+                                        theme.textTheme.headlineSmall),
+                            scrollPhysics: BouncingScrollPhysics(),
                           ),
                         ),
                         Padding(
@@ -142,9 +149,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.only(right: 8.0),
                                   child: TextField(
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall,
+                                    style: theme.textTheme.headlineSmall,
                                     textAlign: TextAlign.left,
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
