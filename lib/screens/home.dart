@@ -100,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     "Hello",
                     style: theme.textTheme.headlineMedium?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.7),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   Text(
@@ -111,146 +111,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 20),
                   // Search Bar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? colorScheme.surface.withOpacity(0.5)
-                          : colorScheme.surface,
-                      borderRadius: BorderRadius.circular(50),
-                      border: Border.all(
-                        color: colorScheme.outline.withOpacity(0.3),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.shadow.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        prefixIcon: Padding(
-                          padding: const EdgeInsets.only(left: 15),
-                          child: Icon(
-                            Icons.search,
-                            color: colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                        hintText: "Search clinics, services...",
-                        hintStyle: theme.textTheme.headlineSmall?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.6),
-                          fontWeight: FontWeight.w400,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 16),
-                      ),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
+                  HomeSearchBar(isDarkMode: isDarkMode, colorScheme: colorScheme, theme: theme),
                   const SizedBox(height: 20),
-
                   // Steps Widget
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          colorScheme.primary,
-                          colorScheme.primary.withOpacity(0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.primary.withOpacity(0.3),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: colorScheme.onPrimary.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.directions_walk,
-                            size: 28,
-                            color: colorScheme.onPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "TODAY'S STEPS", // It only track from phone's last boot
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onPrimary.withOpacity(0.9),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _steps > 0 ? _steps.toString() : 'Loading...',
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                  color: colorScheme.onPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                    20), // makes it pill-shaped
-                                child: LinearProgressIndicator(
-                                  value: (_steps.clamp(0, 10000)) / 10000,
-                                  minHeight:
-                                      10, // optional: makes the pill taller
-                                  backgroundColor:
-                                      colorScheme.onPrimary.withOpacity(0.1),
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      colorScheme.onPrimary),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.onPrimary.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Text(
-                            "Goal: 10K",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onPrimary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  StepsCard(colorScheme: colorScheme, theme: theme, steps: _steps),
                   const SizedBox(height: 20),
-
                   // Upcoming Schedule
                   Text(
                     "Upcoming Schedule",
@@ -259,60 +124,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  Container(
-                    height: 130,
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          colorScheme.secondaryContainer,
-                          colorScheme.secondaryContainer.withOpacity(0.7),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: colorScheme.outline.withOpacity(0.2),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.primary.withOpacity(0.3),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 32,
-                          color: colorScheme.onSecondaryContainer,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "No appointments today",
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            color: colorScheme.onSecondaryContainer,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Tap to schedule",
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSecondaryContainer
-                                .withOpacity(0.8),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  UpcomingScheduleCard(colorScheme: colorScheme, theme: theme),
                   const SizedBox(height: 20),
-
                   // What do you need?
                   Text(
                     "What do you need?",
@@ -373,11 +186,11 @@ class _HomeScreenState extends State<HomeScreen> {
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: colorScheme.outline.withOpacity(0.2),
+          color: colorScheme.outline.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -398,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
+                    color: color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -421,6 +234,242 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class UpcomingScheduleCard extends StatelessWidget {
+  const UpcomingScheduleCard({
+    super.key,
+    required this.colorScheme,
+    required this.theme,
+  });
+
+  final ColorScheme colorScheme;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 130,
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.secondaryContainer,
+            colorScheme.secondaryContainer.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.calendar_today_outlined,
+            size: 32,
+            color: colorScheme.onSecondaryContainer,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "No appointments today",
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: colorScheme.onSecondaryContainer,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Tap to schedule",
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSecondaryContainer
+                  .withValues(alpha: 0.8),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class StepsCard extends StatelessWidget {
+  const StepsCard({
+    super.key,
+    required this.colorScheme,
+    required this.theme,
+    required int steps,
+  }) : _steps = steps;
+
+  final ColorScheme colorScheme;
+  final ThemeData theme;
+  final int _steps;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primary,
+            colorScheme.primary.withValues(alpha: 0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colorScheme.onPrimary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.directions_walk,
+              size: 28,
+              color: colorScheme.onPrimary,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "TODAY'S STEPS", // It only track from phone's last boot
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onPrimary.withValues(alpha: 0.9),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _steps > 0 ? _steps.toString() : 'Loading...',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                      20), // makes it pill-shaped
+                  child: LinearProgressIndicator(
+                    value: (_steps.clamp(0, 10000)) / 10000,
+                    minHeight:
+                        10, // optional: makes the pill taller
+                    backgroundColor:
+                        colorScheme.onPrimary.withValues(alpha: 0.1),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        colorScheme.onPrimary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: colorScheme.onPrimary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Text(
+              "Goal: 10K",
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onPrimary,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeSearchBar extends StatelessWidget {
+  const HomeSearchBar({
+    super.key,
+    required this.isDarkMode,
+    required this.colorScheme,
+    required this.theme,
+  });
+
+  final bool isDarkMode;
+  final ColorScheme colorScheme;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode
+            ? colorScheme.surface.withValues(alpha: 0.7)
+            : colorScheme.surface,
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 15),
+            child: Icon(
+              Icons.search,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          hintText: "Search clinics, services...",
+          hintStyle: theme.textTheme.headlineSmall?.copyWith(
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
+            fontWeight: FontWeight.w400,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16.0, vertical: 16),
+        ),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurface,
         ),
       ),
     );
