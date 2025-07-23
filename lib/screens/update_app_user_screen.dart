@@ -16,7 +16,8 @@ class UpdateAppUserScreen extends StatefulWidget {
 
 class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
   //TODO add contact, age, gender throughout this screen
-  TextEditingController nameController = TextEditingController();
+  TextEditingController firstNameController = TextEditingController();
+  TextEditingController lastNameController = TextEditingController();
   // TextEditingController contactController = TextEditingController();
   PhoneController phoneController = PhoneController(PhoneNumber.parse('+65'));
   TextEditingController ageController = TextEditingController();
@@ -51,7 +52,8 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
               if (snapshot.hasData) {
                 if (snapshot.data!.docs.isNotEmpty) {
                   QueryDocumentSnapshot doc = snapshot.data!.docs[0];
-                  nameController.text = doc.get('name') ?? '';
+                  firstNameController.text = doc.get('name') ?? '';
+                  lastNameController.text = doc.get('nameLast') ?? '';
                   // contactController.text = doc.get('contact') ?? '';
                   ageController.text = doc.get('age') ?? '';
                   genderController.text = doc.get('gender') ?? '';
@@ -96,11 +98,15 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                           child: TextField(
                             style: theme.textTheme.headlineSmall,
                             textAlign: TextAlign.left,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'First Name',
-                              border: OutlineInputBorder(),
+                              labelStyle: theme.textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[850]),
+                              border: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16))),
                             ),
-                            controller: nameController,
+                            controller: firstNameController,
                           ),
                         ),
                         Padding(
@@ -108,24 +114,34 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                           child: TextField(
                             style: theme.textTheme.headlineSmall,
                             textAlign: TextAlign.left,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Last Name',
-                              border: OutlineInputBorder(),
+                              labelStyle: theme.textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[850]),
+                              border: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16))),
                             ),
-                            controller: nameController,
+                            controller: lastNameController,
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
                           child: PhoneInput(
                             style: theme.textTheme.headlineSmall,
+                            countryCodeStyle: theme.textTheme.headlineSmall,
                             controller: phoneController,
                             defaultCountry: IsoCode.SG,
                             flagShape: BoxShape.rectangle,
+                            showArrow: true,
                             flagSize: 20,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Phone (Mobile)',
-                              border: OutlineInputBorder(),
+                              labelStyle: theme.textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[850]),
+                              border: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16))),
                             ),
                             validator: PhoneValidator.compose([
                               PhoneValidator.required(),
@@ -152,9 +168,13 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                                     style: theme.textTheme.headlineSmall,
                                     textAlign: TextAlign.left,
                                     keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       labelText: 'Age',
-                                      border: OutlineInputBorder(),
+                                      labelStyle: theme.textTheme.bodyMedium
+                                          ?.copyWith(color: Colors.grey[850]),
+                                      border: const OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(16))),
                                     ),
                                     controller: ageController,
                                   ),
@@ -165,9 +185,13 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 8.0),
                                   child: DropdownButtonFormField<String>(
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       labelText: 'Gender',
-                                      border: OutlineInputBorder(),
+                                      labelStyle: theme.textTheme.bodyMedium
+                                          ?.copyWith(color: Colors.grey[850]),
+                                      border: const OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(16))),
                                     ),
                                     value: genderController.text.isEmpty
                                         ? null
@@ -206,7 +230,8 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                             String phoneNumber =
                                 phoneController.value?.international ?? '';
                             appUser = AppUser(
-                              name: nameController.text,
+                              name: firstNameController.text,
+                              nameLast: lastNameController.text,
                               email: auth.currentUser?.email ?? "",
                               userid: auth.currentUser?.uid ?? "",
                               // contact: contactController.text,

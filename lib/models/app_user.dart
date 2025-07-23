@@ -1,5 +1,6 @@
 class AppUser {
   String name;
+  String nameLast;
   String email;
   String userid;
   String contact;
@@ -9,6 +10,7 @@ class AppUser {
 
   AppUser({
     required this.name,
+    required this.nameLast,
     required this.email,
     required this.userid,
     required this.contact,

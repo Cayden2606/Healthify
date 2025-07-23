@@ -21,6 +21,7 @@ class FirebaseCalls {
       QueryDocumentSnapshot doc = querySnap.docs[0];
       appUser = AppUser(
         name: doc.get('name'),
+        nameLast: doc.get('nameLast'),
         email: doc.get('email'),
         userid: doc.get('userid'),
         contact: doc.get('contact'),
@@ -31,6 +32,7 @@ class FirebaseCalls {
       newUser = true;
       appUser = AppUser(
         name: auth.currentUser?.displayName ?? '',
+        nameLast: auth.currentUser?.displayName ?? '',
         email: auth.currentUser?.email ?? '',
         userid: auth.currentUser?.uid ?? '',
         contact: '',
@@ -52,6 +54,7 @@ class FirebaseCalls {
       QueryDocumentSnapshot doc = querySnap.docs[0];
       await doc.reference.update({
         'name': appUser.name,
+        'nameLast': appUser.nameLast,
         'age': appUser.age,
         'gender': appUser.gender,
         'contact': appUser.contact,
@@ -60,6 +63,7 @@ class FirebaseCalls {
       //New user
       await appUsersCollection.add({
         'name': appUser.name,
+        'nameLast': appUser.nameLast,
         'email': appUser.email,
         'userid': appUser.userid,
         'age': appUser.age,
