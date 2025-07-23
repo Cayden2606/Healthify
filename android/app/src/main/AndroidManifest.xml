@@ -16,7 +16,9 @@
             <data android:mimeType="*/*" />
         </intent>
     </queries>
-    
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
     <application
         android:label="healthify"
         android:name="${applicationName}"

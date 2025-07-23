@@ -4,10 +4,12 @@ import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
 import 'package:healthify/models/settings_item.dart';
 import 'package:healthify/models/theme_colors.dart';
 
+import 'package:healthify/utilities/firebase_calls.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({
-    super.key, 
-    required this.darkMode, 
+    super.key,
+    required this.darkMode,
     required this.toggleDarkMode,
     required this.userColor,
     required this.setUserColor,
@@ -23,7 +25,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  
   String _currentLanguage = 'English';
   void _languageChange(String? value) {
     setState(() {
@@ -42,7 +43,9 @@ class _SettingsPageState extends State<SettingsPage> {
         subtitle: 'Enable dark mode',
         trailing: Switch(
           value: widget.darkMode,
-          thumbIcon: widget.darkMode ? WidgetStateProperty.all(const Icon(Icons.check)) : null,
+          thumbIcon: widget.darkMode
+              ? WidgetStateProperty.all(const Icon(Icons.check))
+              : null,
           onChanged: widget.toggleDarkMode,
         ),
         onTap: () => {},
@@ -51,10 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
         icon: Icons.notifications,
         title: 'Notifications',
         subtitle: 'Enable notifications',
-        trailing: Switch(
-          value: false,
-          onChanged: (bool value) => {}
-        ),
+        trailing: Switch(value: false, onChanged: (bool value) => {}),
         onTap: () => {},
       ),
       SettingsItem(
@@ -80,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
               value: 'தமிழ்',
               child: Text('தமிழ்'),
             ),
-          ], 
+          ],
           onChanged: _languageChange,
         ),
         onTap: () => {},
@@ -98,7 +98,8 @@ class _SettingsPageState extends State<SettingsPage> {
               context: context,
               builder: (context) {
                 return Container(
-                  height: MediaQuery.sizeOf(context).height * 0.5, // adjust the height to your liking
+                  height: MediaQuery.sizeOf(context).height *
+                      0.5, // adjust the height to your liking
                   padding: const EdgeInsets.all(16),
                   // https://api.flutter.dev/flutter/widgets/GridView-class.html
                   child: GridView.builder(
@@ -159,6 +160,15 @@ class _SettingsPageState extends State<SettingsPage> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              auth.signOut();
+              Navigator.pushReplacementNamed(context, '/');
+            },
+            icon: const Icon(Icons.logout),
+          ),
+        ],
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
@@ -168,23 +178,20 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           children: [
             BuildSettingsSection(
-              header: 'General',
-              items: generalItems,
-              iconBackgroundColour: _theme.colorScheme.primaryFixed,
-              iconColour: _theme.colorScheme.onPrimaryFixedVariant
-            ),
+                header: 'General',
+                items: generalItems,
+                iconBackgroundColour: _theme.colorScheme.primaryFixed,
+                iconColour: _theme.colorScheme.onPrimaryFixedVariant),
             BuildSettingsSection(
-              header: 'Theming',
-              items: themingItems,
-              iconBackgroundColour: _theme.colorScheme.secondaryFixed,
-              iconColour: _theme.colorScheme.onSecondaryFixedVariant
-            ),
+                header: 'Theming',
+                items: themingItems,
+                iconBackgroundColour: _theme.colorScheme.secondaryFixed,
+                iconColour: _theme.colorScheme.onSecondaryFixedVariant),
             BuildSettingsSection(
-              header: 'Privacy',
-              items: privacyItems,
-              iconBackgroundColour: _theme.colorScheme.tertiaryFixed,
-              iconColour: _theme.colorScheme.onTertiaryFixedVariant
-            ),
+                header: 'Privacy',
+                items: privacyItems,
+                iconBackgroundColour: _theme.colorScheme.tertiaryFixed,
+                iconColour: _theme.colorScheme.onTertiaryFixedVariant),
             SizedBox(height: 40)
           ],
         ),
@@ -195,7 +202,12 @@ class _SettingsPageState extends State<SettingsPage> {
 }
 
 class BuildSettingsSection extends StatelessWidget {
-  const BuildSettingsSection({super.key, required this.header, required this.items, required this.iconBackgroundColour, required this.iconColour });
+  const BuildSettingsSection(
+      {super.key,
+      required this.header,
+      required this.items,
+      required this.iconBackgroundColour,
+      required this.iconColour});
 
   final String header;
   final List<SettingsItem> items;
@@ -211,43 +223,37 @@ class BuildSettingsSection extends StatelessWidget {
       children: [
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-          child: Text(
-            header,
-            style: _theme.textTheme.headlineMedium
-          ),
+          child: Text(header, style: _theme.textTheme.headlineMedium),
         ),
         Card(
           margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
           color: _theme.colorScheme.surfaceBright,
           child: ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
-                leading: Container(
-                  padding: const EdgeInsets.all(4.0),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: iconBackgroundColour
-                  ),
-                  child: Icon(items[index].icon, color: iconColour)
-                ),
-                title: Text(
-                  items[index].title,
-                  style: _theme.textTheme.headlineMedium!.copyWith(fontSize: 16)
-                ),
-                subtitle: Text(
-                  items[index].subtitle != null ? items[index].subtitle! : '',
-                  style: _theme.textTheme.bodySmall
-                ),
-                trailing: items[index].trailing,
-                onTap: items[index].onTap,
-              );
-            }
-          ),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 0.0),
+                  leading: Container(
+                      padding: const EdgeInsets.all(4.0),
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle, color: iconBackgroundColour),
+                      child: Icon(items[index].icon, color: iconColour)),
+                  title: Text(items[index].title,
+                      style: _theme.textTheme.headlineMedium!
+                          .copyWith(fontSize: 16)),
+                  subtitle: Text(
+                      items[index].subtitle != null
+                          ? items[index].subtitle!
+                          : '',
+                      style: _theme.textTheme.bodySmall),
+                  trailing: items[index].trailing,
+                  onTap: items[index].onTap,
+                );
+              }),
         ),
       ],
     );
