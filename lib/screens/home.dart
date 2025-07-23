@@ -63,27 +63,34 @@ class _HomeScreenState extends State<HomeScreen> {
       final hex = colorToHex(color);
       return '''
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <path fill="$hex" d="M45.2,-52.2C59.1,-42.2,71.4,-28.5,68.1,-16.5C64.8,-4.6,46,5.5,36.8,21.2C27.7,36.9,28.3,58.2,19.5,67.5C10.7,76.7,-7.6,73.9,-24.6,67.7C-41.6,61.5,-57.3,51.8,-66,37.6C-74.8,23.5,-76.6,4.8,-69.9,-8.7C-63.2,-22.3,-48,-30.7,-35,-40.9C-21.9,-51,-10.9,-62.9,2.3,-65.7C15.6,-68.5,31.3,-62.2,45.2,-52.2Z" transform="translate(100 100)" />
+  <path fill="$hex" d="M42,-47.9C54.9,-39.2,66.3,-26.4,70,-11.4C73.7,3.6,69.9,20.9,60,31.6C50.2,42.4,34.4,46.6,17.9,55.2C1.5,63.7,-15.5,76.6,-31.1,75.3C-46.6,74,-60.6,58.5,-63.4,42.2C-66.2,25.8,-57.8,8.6,-52.8,-7.5C-47.8,-23.6,-46.2,-38.4,-38,-47.9C-29.8,-57.5,-14.9,-61.7,-0.2,-61.5C14.5,-61.3,29,-56.6,42,-47.9Z" transform="translate(100 100)" />
 </svg>
 ''';
     }
 
+    final size = MediaQuery.of(context).size;
+
     return Stack(
       children: [
+        Container(
+          height: size.height,
+          width: size.width,
+          color: colorScheme.surface,
+        ),
         Positioned(
-          top: -100,
-          left: -150,
+          top: -240,
+          left: -210,
           child: SvgPicture.string(
-            getBlobSvg(colorScheme.primary),
-            width: 400,
-            height: 400,
+            getBlobSvg(colorScheme.secondaryContainer),
+            width: 730,
+            height: 730,
           ),
         ),
         Scaffold(
-          // backgroundColor: Colors.transparent,
+          backgroundColor: Colors.transparent,
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(25, 20, 25, 25),
+              padding: const EdgeInsets.fromLTRB(25, 15, 25, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

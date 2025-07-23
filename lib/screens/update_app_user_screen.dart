@@ -34,12 +34,12 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
         title: const Text(
           'Update Profile',
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 20, 0),
-            child: ElevatedButton(onPressed: () {}, child: Text("Save")),
-          ),
-        ],
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.fromLTRB(0, 0, 20, 0),
+        //     child: ElevatedButton(onPressed: () {}, child: Text("Save")),
+        //   ),
+        // ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
