@@ -40,7 +40,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
             Navigator.pushReplacementNamed(context, '/user');
             break;
           case 3:
-            Navigator.pushReplacementNamed(context, '/settings');
+            Navigator.pushNamed(context, '/settings');
             break;
         }
       },
