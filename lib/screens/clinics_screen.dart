@@ -1,7 +1,7 @@
 import 'dart:convert';
+import 'package:healthify/utilities/api_calls.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
 import 'package:healthify/models/clinic.dart';
@@ -25,54 +25,48 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
   late Clinic _selectedClinic;
 
-  Future<List<dynamic>> fetchClinics() async {
-    String baseURL = 'https://api.geoapify.com/v2/places';
-
-    Map<String, String> requestHeaders = {
-    };
-
-    Map<String, String> queryParams = {
-      "categories": "healthcare.clinic_or_praxis",
-      "filter": "place:5164e2bd2f5cfb594059cd6bad0dfe09f63ff00101f901a1773a0000000000c002099203094e6f72746865617374",
-      "limit": "20",
-      'apiKey': await dotenv.env['GEOAPIFY_API_KEY']!
-    };
-
-    String queryString = Uri(queryParameters: queryParams).query;
-    final response = await http.get(
-      Uri.parse(baseURL + '?' + queryString),
-      // headers: requestHeaders,
-    );
-
-    if (response.statusCode == 200) {
-      // get json list
-      List<dynamic> jsonList = jsonDecode(response.body)["features"] as List<dynamic>;
-
-      // convert to list of movies
-      List<Clinic> clinicsList = jsonList.map(
-        (json) => Clinic.fromJson(json)
-      ).toList();
-      
-      return clinicsList;
-    } else {
-      throw Exception('Failed to load');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    fetchClinics();
     
     return Scaffold(
       bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 1),
       body: SafeArea(
         child: Column(
           children: [
-            Text("this is an empty page pls read the comments in the code")
+            Text("this is an empty page pls read the comments in the code"),
             //TODO Dropdown widget for user to select region
-            //TODO FutureBuilder to get clinics in selected region
-            
-            //TODO Implement onTap for clinic > shows AddApptScreen() in bottom sheet
+            FutureBuilder<List<dynamic>>(
+              future: ApiCalls().fetchClinics(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text('No clinics found.'));
+                } else {
+                  List<Clinic> clinics = snapshot.data as List<Clinic>;
+                  return Expanded(
+                    child: ListView.builder(
+                      itemCount: clinics.length,
+                      itemBuilder: (context, index) {
+                        Clinic clinic = clinics[index];
+                        return ListTile(
+                          title: Text(clinic.name),
+                          subtitle: Text(clinic.address),
+                          onTap: () {
+                            setState(() {
+                              _selectedClinic = clinic;
+                            });
+                            //TODO Implement onTap for clinic > shows AddApptScreen() in bottom sheet
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }
+              },
+            ),
             //TODO Adds appointment to firebase with userid, userName, point_id, clinicName, date and time
           ],
         ),

@@ -26,8 +26,6 @@ class FirebaseCalls {
         contact: doc.get('contact'),
         age: doc.get('age'),
         gender: doc.get('gender'),
-
-        //TODO add contact, age, gender
       );
     } else {
       newUser = true;
@@ -38,7 +36,6 @@ class FirebaseCalls {
         contact: '',
         age: '',
         gender: '',
-        //TODO add contact, age, gender
       );
     }
     return appUser;
@@ -58,7 +55,6 @@ class FirebaseCalls {
         'age': appUser.age,
         'gender': appUser.gender,
         'contact': appUser.contact,
-        //TODO add contact, age, gender
       });
     } else {
       //New user
@@ -69,7 +65,6 @@ class FirebaseCalls {
         'age': appUser.age,
         'gender': appUser.gender,
         'contact': appUser.contact,
-        //TODO add contact, age, gender
       });
     }
   }

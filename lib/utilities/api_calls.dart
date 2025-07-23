@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import 'package:healthify/models/clinic.dart';
 
 class ApiCalls {
   Map<String, String> cityId = {
@@ -15,19 +18,36 @@ class ApiCalls {
         '515c3679cb78005a4059e207c2b16152f53ff00101f901a3773a0000000000c00209920309536f75746865617374',
   };
 
-  void fetchClinics(String region) async {
-    final String apiKey = 'YOUR-API-KEY';
+  Future<List<dynamic>> fetchClinics() async {
+    final String apiKey = dotenv.env['GEOAPIFY_API_KEY']!;
     final String baseURL = 'https://api.geoapify.com/v2/places';
 
-    final uri = Uri.parse(
-      '$baseURL?categories=healthcare.clinic_or_praxis&filter=place:${cityId[region]}&limit=10&apiKey=$apiKey',
+    // Map<String, String> requestHeaders = {};
+
+    Map<String, String> queryParams = {
+      "categories": "healthcare.clinic_or_praxis",
+      "filter": "place:5164e2bd2f5cfb594059cd6bad0dfe09f63ff00101f901a1773a0000000000c002099203094e6f72746865617374",
+      "limit": "20",
+      'apiKey': apiKey,
+    };
+
+    String queryString = Uri(queryParameters: queryParams).query;
+    final response = await http.get(
+      Uri.parse('${baseURL}?${queryString}'),
     );
-    final response = await http.get(uri);
 
     if (response.statusCode == 200) {
-      //TODO return List<Clinic>
+      // get json list
+      List<dynamic> jsonList = jsonDecode(response.body)["features"] as List<dynamic>;
+
+      // convert to list of movies
+      List<Clinic> clinicsList = jsonList.map(
+        (json) => Clinic.fromJson(json)
+      ).toList();
+      
+      return clinicsList;
     } else {
-      throw Exception('Failed to load clinics');
+      throw Exception('Failed to load');
     }
   }
 
