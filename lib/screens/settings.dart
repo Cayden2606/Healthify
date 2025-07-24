@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
 import 'package:healthify/models/settings_item.dart';
 import 'package:healthify/models/theme_colors.dart';
+import 'package:healthify/screens/update_app_user_screen.dart';
 
 import 'package:healthify/utilities/firebase_calls.dart';
 
@@ -176,7 +177,105 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Column(
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 4.0),
+                  child:
+                      Text("Profile", style: _theme.textTheme.headlineMedium),
+                ),
+              ],
+            ),
+            // Card(
+            //   margin:
+            //       const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            //   color: _theme.colorScheme.surfaceBright,
+            //   child: ListTile(
+            //     contentPadding:
+            //         const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            //     leading: CircleAvatar(
+            //       radius: 30, // Larger profile picture
+            //       backgroundColor: Colors.green,
+            //       child: Text(
+            //         '${_userFirstName[0]}${_userLastName[0]}',
+            //         style: TextStyle(
+            //           color: Colors.white,
+            //           fontWeight: FontWeight.bold,
+            //           fontSize: 20,
+            //         ),
+            //       ),
+            //     ),
+            //     title: Text(
+            //       '$_userFirstName $_userLastName',
+            //       style:
+            //           _theme.textTheme.headlineMedium!.copyWith(fontSize: 16),
+            //     ),
+            //     subtitle: Text(
+            //       _userPhoneNumber,
+            //       style: _theme.textTheme.bodySmall,
+            //     ),
+            //     trailing: Icon(Icons.keyboard_arrow_down),
+            //     onTap: () {
+            //       // TODO: GO TO THE USER PAGE
+            //     },
+            //   ),
+            // ),
+
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const UpdateAppUserScreen()),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 32,
+                        backgroundColor:
+                            _theme.colorScheme.onPrimaryFixedVariant,
+                        child: Text(
+                          // TODO: Make an if else, if no PFP,use the text
+                          '${appUser.name[0]}${appUser.nameLast[0]}',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${appUser.name} ${appUser.nameLast}',
+                              style: _theme.textTheme.headlineMedium!
+                                  .copyWith(fontSize: 16),
+                            ),
+                            Text(
+                              appUser.contact,
+                              style: _theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.keyboard_arrow_down),
+                    ],
+                  ),
+                ),
+              ),
+            ),
             BuildSettingsSection(
                 header: 'General',
                 items: generalItems,

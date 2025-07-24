@@ -70,13 +70,54 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                   SizedBox(
                     height: 40,
                   ),
-                  CircleAvatar(
-                    radius: 54,
-                    backgroundImage: NetworkImage(
-                      "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
-                    ),
-                    backgroundColor: Colors.transparent,
+                  Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      CircleAvatar(
+                        radius: 54,
+                        backgroundColor:
+                            theme.colorScheme.onPrimaryFixedVariant,
+                        child: Text(
+                          (firstNameController.text.isNotEmpty &&
+                                  lastNameController.text.isNotEmpty)
+                              ? '${firstNameController.text[0]}${lastNameController.text[0]}'
+                              : '',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 36,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: InkWell(
+                          onTap: () {
+                            // TODO: Add logic to remove or reset the PFP
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Delete PFP tapped')),
+                            );
+                          },
+                          child: CircleAvatar(
+                            // TODO: Make it only show if have PFP, if no pfp leave it.
+                            radius: 13,
+                            backgroundColor: Colors.redAccent,
+                            child: Icon(Icons.delete_forever,
+                                size: 15, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+
+                  // CircleAvatar(
+                  //   radius: 54,
+                  //   backgroundImage: NetworkImage(
+                  //     "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
+                  //   ),
+                  //   backgroundColor: Colors.transparent,
+                  // ),
                   TextButton(
                     onPressed:
                         () {}, // TODO: Add a way for user to upload their own images
@@ -100,8 +141,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                             textAlign: TextAlign.left,
                             decoration: InputDecoration(
                               labelText: 'First Name',
-                              labelStyle: theme.textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.grey[850]),
+                              labelStyle: theme.textTheme.bodyMedium,
                               border: const OutlineInputBorder(
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(16))),
@@ -116,8 +156,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                             textAlign: TextAlign.left,
                             decoration: InputDecoration(
                               labelText: 'Last Name',
-                              labelStyle: theme.textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.grey[850]),
+                              labelStyle: theme.textTheme.bodyMedium,
                               border: const OutlineInputBorder(
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(16))),
@@ -137,8 +176,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                             flagSize: 20,
                             decoration: InputDecoration(
                               labelText: 'Phone (Mobile)',
-                              labelStyle: theme.textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.grey[850]),
+                              labelStyle: theme.textTheme.bodyMedium,
                               border: const OutlineInputBorder(
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(16))),
@@ -170,8 +208,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                                     keyboardType: TextInputType.number,
                                     decoration: InputDecoration(
                                       labelText: 'Age',
-                                      labelStyle: theme.textTheme.bodyMedium
-                                          ?.copyWith(color: Colors.grey[850]),
+                                      labelStyle: theme.textTheme.bodyMedium,
                                       border: const OutlineInputBorder(
                                           borderRadius: BorderRadius.all(
                                               Radius.circular(16))),
@@ -187,8 +224,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                                   child: DropdownButtonFormField<String>(
                                     decoration: InputDecoration(
                                       labelText: 'Gender',
-                                      labelStyle: theme.textTheme.bodyMedium
-                                          ?.copyWith(color: Colors.grey[850]),
+                                      labelStyle: theme.textTheme.bodyMedium,
                                       border: const OutlineInputBorder(
                                           borderRadius: BorderRadius.all(
                                               Radius.circular(16))),
@@ -224,8 +260,9 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(45),
-                          ),
+                              minimumSize: const Size.fromHeight(45),
+                              backgroundColor:
+                                  theme.colorScheme.primaryContainer),
                           onPressed: () async {
                             String phoneNumber =
                                 phoneController.value?.international ?? '';
