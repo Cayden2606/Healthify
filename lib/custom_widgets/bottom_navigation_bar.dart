@@ -19,9 +19,13 @@ class CustomBottomNavigationBar extends StatelessWidget {
           label: 'Clinics',
           icon: Icon(Icons.local_hospital),
         ),
+        // NavigationDestination(
+        //   label: 'User',
+        //   icon: Icon(Icons.person),
+        // ),
         NavigationDestination(
-          label: 'User',
-          icon: Icon(Icons.person),
+          label: 'AI',
+          icon: Icon(Icons.auto_awesome),
         ),
         NavigationDestination(
           icon: Icon(Icons.settings),
@@ -36,8 +40,11 @@ class CustomBottomNavigationBar extends StatelessWidget {
           case 1:
             Navigator.pushReplacementNamed(context, '/clinics');
             break;
+          // case 2:
+          //   Navigator.pushReplacementNamed(context, '/user');
+          //   break;
           case 2:
-            Navigator.pushReplacementNamed(context, '/user');
+            Navigator.pushReplacementNamed(context, '/assistant');
             break;
           case 3:
             Navigator.pushNamed(context, '/settings');

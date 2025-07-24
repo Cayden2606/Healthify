@@ -1,5 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:healthify/screens/health_assistant.dart';
 // import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart';
@@ -25,6 +27,8 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  Gemini.init(apiKey: dotenv.env['GEMINI_API_KEY']!);
 
   runApp(const MyApp());
 }
@@ -60,6 +64,7 @@ class _MyAppState extends State<MyApp> {
         '/home': (context) => HomeScreen(),
         '/clinics': (context) => const ClinicsScreen(),
         '/user': (context) => const UpdateAppUserScreen(),
+        '/assistant': (context) => const HealthAssistant(),
         '/settings': (context) => SettingsPage(
             darkMode: _darkMode,
             toggleDarkMode: _toggleDarkMode,

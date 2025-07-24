@@ -76,7 +76,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
     ThemeData theme = Theme.of(context);
 
     return Scaffold(
-      bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 2),
+      // bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 2),
       appBar: AppBar(
         title: const Text(
           'Update Profile',
