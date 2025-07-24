@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
+import 'package:healthify/screens/settings.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -24,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void onStepCount(StepCount event) {
+    if (!mounted) return; // Prevent setState if widget is disposed
     setState(() {
       _steps = event.steps;
     });
@@ -95,13 +97,52 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header with avatar and greeting
-                  CircleAvatar(
-                    radius: 25,
-                    backgroundImage: const NetworkImage(
-                      "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
-                    ),
-                    backgroundColor: Colors.transparent,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CircleAvatar(
+                        radius: 25,
+                        backgroundColor:
+                            theme.colorScheme.onPrimaryFixedVariant,
+                        backgroundImage: appUser.profilePic.isNotEmpty
+                            ? NetworkImage(appUser.profilePic)
+                            : null,
+                        child: appUser.profilePic.isEmpty
+                            ? Text(
+                                '${appUser.name[0]}${appUser.nameLast[0]}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                ),
+                              )
+                            : null,
+                      ),
+                      IconButton(
+                        icon: Icon(
+                            Icons.settings_rounded), // or any icon you want
+                        onPressed: () {
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //       builder: (context) => const SettingsPage(
+                          //           darkMode: darkMode,
+                          //           toggleDarkMode: toggleDarkMode,
+                          //           userColor: userColor,
+                          //           setUserColor: setUserColor)),
+                          // );
+                        },
+                      )
+                    ],
                   ),
+
+                  // CircleAvatar(
+                  //   radius: 25,
+                  //   backgroundImage: const NetworkImage(
+                  //     "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
+                  //   ),
+                  //   backgroundColor: Colors.transparent,
+                  // ),
 
                   const SizedBox(height: 20),
                   Text(
@@ -118,10 +159,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 20),
                   // Search Bar
-                  HomeSearchBar(isDarkMode: isDarkMode, colorScheme: colorScheme, theme: theme),
+                  HomeSearchBar(
+                      isDarkMode: isDarkMode,
+                      colorScheme: colorScheme,
+                      theme: theme),
                   const SizedBox(height: 20),
                   // Steps Widget
-                  StepsCard(colorScheme: colorScheme, theme: theme, steps: _steps),
+                  StepsCard(
+                      colorScheme: colorScheme, theme: theme, steps: _steps),
                   const SizedBox(height: 20),
                   // Upcoming Schedule
                   Text(
@@ -303,8 +348,7 @@ class UpcomingScheduleCard extends StatelessWidget {
           Text(
             "Tap to schedule",
             style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSecondaryContainer
-                  .withValues(alpha: 0.8),
+              color: colorScheme.onSecondaryContainer.withValues(alpha: 0.8),
               fontSize: 12,
             ),
           ),
@@ -387,16 +431,15 @@ class StepsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                      20), // makes it pill-shaped
+                  borderRadius:
+                      BorderRadius.circular(20), // makes it pill-shaped
                   child: LinearProgressIndicator(
                     value: (_steps.clamp(0, 10000)) / 10000,
-                    minHeight:
-                        10, // optional: makes the pill taller
+                    minHeight: 10, // optional: makes the pill taller
                     backgroundColor:
                         colorScheme.onPrimary.withValues(alpha: 0.1),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        colorScheme.onPrimary),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
                   ),
                 ),
               ],
@@ -472,8 +515,8 @@ class HomeSearchBar extends StatelessWidget {
             fontWeight: FontWeight.w400,
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16.0, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
         ),
         style: theme.textTheme.bodyMedium?.copyWith(
           color: colorScheme.onSurface,

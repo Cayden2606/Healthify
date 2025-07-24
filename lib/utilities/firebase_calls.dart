@@ -20,25 +20,25 @@ class FirebaseCalls {
     if (querySnap.docs.isNotEmpty) {
       QueryDocumentSnapshot doc = querySnap.docs[0];
       appUser = AppUser(
-        name: doc.get('name'),
-        nameLast: doc.get('nameLast'),
-        email: doc.get('email'),
-        userid: doc.get('userid'),
-        contact: doc.get('contact'),
-        age: doc.get('age'),
-        gender: doc.get('gender'),
-      );
+          name: doc.get('name'),
+          nameLast: doc.get('nameLast'),
+          email: doc.get('email'),
+          userid: doc.get('userid'),
+          contact: doc.get('contact'),
+          age: doc.get('age'),
+          gender: doc.get('gender'),
+          profilePic: doc.get('profilePic'));
     } else {
       newUser = true;
       appUser = AppUser(
-        name: auth.currentUser?.displayName ?? '',
-        nameLast: auth.currentUser?.displayName ?? '',
-        email: auth.currentUser?.email ?? '',
-        userid: auth.currentUser?.uid ?? '',
-        contact: '',
-        age: '',
-        gender: '',
-      );
+          name: auth.currentUser?.displayName ?? '',
+          nameLast: auth.currentUser?.displayName ?? '',
+          email: auth.currentUser?.email ?? '',
+          userid: auth.currentUser?.uid ?? '',
+          contact: '',
+          age: '',
+          gender: '',
+          profilePic: '');
     }
     return appUser;
   }
@@ -58,6 +58,7 @@ class FirebaseCalls {
         'age': appUser.age,
         'gender': appUser.gender,
         'contact': appUser.contact,
+        'profilePic': appUser.profilePic,
       });
     } else {
       //New user
@@ -69,6 +70,7 @@ class FirebaseCalls {
         'age': appUser.age,
         'gender': appUser.gender,
         'contact': appUser.contact,
+        'profilePic': appUser.profilePic,
       });
     }
   }

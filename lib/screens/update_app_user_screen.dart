@@ -1,5 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 
 import '../models/app_user.dart';
 import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
@@ -23,7 +28,48 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
   TextEditingController ageController = TextEditingController();
   TextEditingController genderController = TextEditingController();
 
+  // Cloudinary stuff
+  final String cloudName = 'dv7xjn1wg';
+  final String uploadPreset = 'healthify_pfp';
+  File? tempImage;
+  bool removePic = false;
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  Future<String?> uploadToCloudinary(File imageFile) async {
+    final url =
+        Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+    final request = http.MultipartRequest('POST', url)
+      ..fields['upload_preset'] = uploadPreset
+      ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseData = await response.stream.bytesToString();
+      final jsonResponse = json.decode(responseData);
+      return jsonResponse['secure_url'];
+    } else {
+      return null;
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        tempImage = File(picked.path);
+      });
+    }
+  }
+
+  void _removeProfilePic() {
+    setState(() {
+      tempImage = null;
+      removePic = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +111,41 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                   }
                 }
               }
+
+              // Choose the avatar to display
+              CircleAvatar displayAvatar;
+
+              if (tempImage != null) {
+                displayAvatar = CircleAvatar(
+                  radius: 54,
+                  backgroundImage: FileImage(tempImage!),
+                  backgroundColor: Colors.transparent,
+                );
+              } else if (appUser.profilePic.isNotEmpty && !removePic) {
+                displayAvatar = CircleAvatar(
+                  radius: 54,
+                  backgroundImage: NetworkImage(appUser.profilePic),
+                  backgroundColor: Colors.transparent,
+                );
+              } else {
+                final initials = (firstNameController.text.isNotEmpty &&
+                        lastNameController.text.isNotEmpty)
+                    ? '${firstNameController.text[0]}${lastNameController.text[0]}'
+                    : '';
+                displayAvatar = CircleAvatar(
+                  radius: 54,
+                  backgroundColor: theme.colorScheme.onPrimaryFixedVariant,
+                  child: Text(
+                    initials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 36,
+                    ),
+                  ),
+                );
+              }
+
               return Column(
                 children: [
                   SizedBox(
@@ -73,54 +154,26 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                   Stack(
                     alignment: Alignment.topRight,
                     children: [
-                      CircleAvatar(
-                        radius: 54,
-                        backgroundColor:
-                            theme.colorScheme.onPrimaryFixedVariant,
-                        child: Text(
-                          (firstNameController.text.isNotEmpty &&
-                                  lastNameController.text.isNotEmpty)
-                              ? '${firstNameController.text[0]}${lastNameController.text[0]}'
-                              : '',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 36,
+                      displayAvatar,
+                      if (tempImage != null || appUser.profilePic.isNotEmpty)
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: InkWell(
+                            onTap: _removeProfilePic,
+                            child: const CircleAvatar(
+                              radius: 13,
+                              backgroundColor: Colors.redAccent,
+                              child: Icon(Icons.delete_forever,
+                                  size: 15, color: Colors.white),
+                            ),
                           ),
                         ),
-                      ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: InkWell(
-                          onTap: () {
-                            // TODO: Add logic to remove or reset the PFP
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Delete PFP tapped')),
-                            );
-                          },
-                          child: CircleAvatar(
-                            // TODO: Make it only show if have PFP, if no pfp leave it.
-                            radius: 13,
-                            backgroundColor: Colors.redAccent,
-                            child: Icon(Icons.delete_forever,
-                                size: 15, color: Colors.white),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
-
-                  // CircleAvatar(
-                  //   radius: 54,
-                  //   backgroundImage: NetworkImage(
-                  //     "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
-                  //   ),
-                  //   backgroundColor: Colors.transparent,
-                  // ),
                   TextButton(
-                    onPressed:
-                        () {}, // TODO: Add a way for user to upload their own images
+                    onPressed: _pickImage,
+                    // TODO: Add a way for user to upload their own images
                     child: Text(
                       "Add picture",
                       style: theme.textTheme.headlineSmall,
@@ -264,18 +317,31 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                               backgroundColor:
                                   theme.colorScheme.primaryContainer),
                           onPressed: () async {
+                            FocusScope.of(context).unfocus();
                             String phoneNumber =
                                 phoneController.value?.international ?? '';
+
+                            // Upload image if selected
+                            String? uploadedUrl;
+                            if (tempImage != null) {
+                              uploadedUrl =
+                                  await uploadToCloudinary(tempImage!);
+                            }
+
+                            // Create and save the updated user
                             appUser = AppUser(
                               name: firstNameController.text,
                               nameLast: lastNameController.text,
                               email: auth.currentUser?.email ?? "",
                               userid: auth.currentUser?.uid ?? "",
-                              // contact: contactController.text,
                               contact: phoneNumber,
                               age: ageController.text,
                               gender: genderController.text,
+                              profilePic: removePic
+                                  ? ''
+                                  : (uploadedUrl ?? appUser.profilePic),
                             );
+
                             await FirebaseCalls().updateAppUser(appUser);
                             Navigator.pushReplacementNamed(context, '/home');
                           },

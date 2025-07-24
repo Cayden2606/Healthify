@@ -243,15 +243,19 @@ class _SettingsPageState extends State<SettingsPage> {
                         radius: 32,
                         backgroundColor:
                             _theme.colorScheme.onPrimaryFixedVariant,
-                        child: Text(
-                          // TODO: Make an if else, if no PFP,use the text
-                          '${appUser.name[0]}${appUser.nameLast[0]}',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                        ),
+                        backgroundImage: appUser.profilePic.isNotEmpty
+                            ? NetworkImage(appUser.profilePic)
+                            : null,
+                        child: appUser.profilePic.isEmpty
+                            ? Text(
+                                '${appUser.name[0]}${appUser.nameLast[0]}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                ),
+                              )
+                            : null,
                       ),
                       SizedBox(width: 16),
                       Expanded(
