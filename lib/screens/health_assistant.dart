@@ -101,7 +101,8 @@ class _HealthAssistantState extends State<HealthAssistant> {
                       Text(
                         'Temporary chat',
                         style: textTheme.displayMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.7),
                             fontSize: 20),
                       ),
                       const SizedBox(height: 100),
@@ -116,7 +117,8 @@ class _HealthAssistantState extends State<HealthAssistant> {
                         "What can I help you with?",
                         textAlign: TextAlign.center,
                         style: textTheme.displayMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.8),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.8),
                             fontSize: 24),
                       ),
                     ],
@@ -181,7 +183,7 @@ class _HealthAssistantState extends State<HealthAssistant> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -218,7 +220,7 @@ class _HealthAssistantState extends State<HealthAssistant> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           blockquote: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.7),
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                             fontStyle: FontStyle.italic,
                             height: 1.1,
                           ),

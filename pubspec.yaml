@@ -54,6 +54,9 @@ dependencies:
   flutter_gemini: ^3.0.0
   dash_chat_2: ^0.0.21
   flutter_markdown: ^0.7.7+1
+  flutter_map: ^8.2.1
+  latlong2: ^0.9.1
+  geolocator: ^14.0.2
 
 
 

@@ -4,8 +4,15 @@ class Clinic {
   final String website;
   final String phone;
   final String email;
-  final String opening_hours;
-  final String place_id;
+  final String openingHours;
+  final String placeId;
+  final String operator;
+  final String branch;
+  final bool wheelchairAccessible;
+  final String wheelchairCondition; // e.g. "limited"
+  final String speciality;
+  final double lat;
+  final double lon;
 
   Clinic({
     required this.name,
@@ -13,20 +20,52 @@ class Clinic {
     required this.website,
     required this.phone,
     required this.email,
-    required this.opening_hours,
-    required this.place_id,
+    required this.openingHours,
+    required this.placeId,
+    required this.operator,
+    required this.branch,
+    required this.wheelchairAccessible,
+    required this.wheelchairCondition,
+    required this.speciality,
+    required this.lat,
+    required this.lon,
   });
 
-  //TODO implement Clinic.fromJson
   factory Clinic.fromJson(Map<String, dynamic> json) {
+    final properties = json['properties'];
+    final geometry = json['geometry'];
+
+    final facilities = properties['facilities'] ?? {};
+    final wheelchairDetails = facilities['wheelchair_details'] ?? {};
+
     return Clinic(
-      name: json["properties"]['name'],
-      address: json["properties"]['address_line2'],
-      website: json["properties"]['website'] ?? '',
-      phone: (json["properties"]['contact']?['phone'] ?? '').toString(),
-      email: json["properties"]['contact']?['email'] ?? '',
-      opening_hours: json["properties"]['opening_hours'] ?? '',
-      place_id: json["properties"]['place_id'],
+      name: properties['name'] ?? '',
+      address: properties['address_line2'] ?? '',
+      website: properties['website'] ??
+          properties['datasource']?['raw']?['website'] ??
+          '',
+      phone: (properties['contact']?['phone'] ??
+              properties['datasource']?['raw']?['phone'] ??
+              '')
+          .toString(),
+      email: properties['contact']?['email'] ?? '',
+      openingHours: properties['opening_hours'] ?? '',
+      placeId: properties['place_id'] ?? '',
+      operator: properties['operator'] ??
+          properties['datasource']?['raw']?['operator'] ??
+          '',
+      branch: properties['branch'] ??
+          properties['datasource']?['raw']?['branch'] ??
+          '',
+      wheelchairAccessible: facilities['wheelchair'] == true ||
+          properties['datasource']?['raw']?['wheelchair'] == 'yes',
+      wheelchairCondition: wheelchairDetails['condition'] ??
+          properties['datasource']?['raw']?['wheelchair'] ??
+          '',
+      speciality:
+          properties['datasource']?['raw']?['healthcare:speciality'] ?? '',
+      lat: (geometry['coordinates']?[1] ?? 0).toDouble(),
+      lon: (geometry['coordinates']?[0] ?? 0).toDouble(),
     );
   }
 }
