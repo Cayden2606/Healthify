@@ -108,6 +108,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     }
   }
 
+
+
   int selectedButtonIndex = 0;
   final DraggableScrollableController _controller =
       DraggableScrollableController();
@@ -177,13 +179,9 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               ),
                             ],
                           ),
-                          // child: Icon(
-                          //   Icons.my_location,
-                          //   color: Colors.white,
-                          //   size: 20,
-                          // ),
                         ),
                       ),
+
                     ],
                   ),
                 if (_currentLocation != null)

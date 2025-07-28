@@ -18,11 +18,9 @@ class ApiCalls {
         '515c3679cb78005a4059e207c2b16152f53ff00101f901a3773a0000000000c00209920309536f75746865617374',
   };
 
-  Future<List<dynamic>> fetchClinics() async {
+  Future<List<Clinic>> fetchClinics() async {
     final String apiKey = dotenv.env['GEOAPIFY_API_KEY']!;
     final String baseURL = 'https://api.geoapify.com/v2/places';
-
-    // Map<String, String> requestHeaders = {};
 
     Map<String, String> queryParams = {
       "categories": "healthcare.clinic_or_praxis",
@@ -40,7 +38,7 @@ class ApiCalls {
       // get json list
       List<dynamic> jsonList = jsonDecode(response.body)["features"] as List<dynamic>;
 
-      // convert to list of movies
+      // convert to list of clinics
       List<Clinic> clinicsList = jsonList.map(
         (json) => Clinic.fromJson(json)
       ).toList();

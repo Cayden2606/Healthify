@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 import '../models/app_user.dart';
-import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
 import '../utilities/firebase_calls.dart';
 
 import 'package:phone_input/phone_input_package.dart';
@@ -20,7 +19,6 @@ class UpdateAppUserScreen extends StatefulWidget {
 }
 
 class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
-  //TODO add contact, age, gender throughout this screen
   TextEditingController firstNameController = TextEditingController();
   TextEditingController lastNameController = TextEditingController();
   // TextEditingController contactController = TextEditingController();

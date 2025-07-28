@@ -97,53 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header with avatar and greeting
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CircleAvatar(
-                        radius: 25,
-                        backgroundColor:
-                            theme.colorScheme.onPrimaryFixedVariant,
-                        backgroundImage: appUser.profilePic.isNotEmpty
-                            ? NetworkImage(appUser.profilePic)
-                            : null,
-                        child: appUser.profilePic.isEmpty
-                            ? Text(
-                                '${appUser.name[0]}${appUser.nameLast[0]}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                ),
-                              )
-                            : null,
-                      ),
-                      IconButton(
-                        icon: Icon(
-                            Icons.settings_rounded), // or any icon you want
-                        onPressed: () {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //       builder: (context) => const SettingsPage(
-                          //           darkMode: darkMode,
-                          //           toggleDarkMode: toggleDarkMode,
-                          //           userColor: userColor,
-                          //           setUserColor: setUserColor)),
-                          // );
-                        },
-                      )
-                    ],
-                  ),
-
-                  // CircleAvatar(
-                  //   radius: 25,
-                  //   backgroundImage: const NetworkImage(
-                  //     "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
-                  //   ),
-                  //   backgroundColor: Colors.transparent,
-                  // ),
-
+                  AppBar(theme: theme),
                   const SizedBox(height: 20),
                   Text(
                     "Hello",
@@ -288,6 +242,49 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class AppBar extends StatelessWidget {
+  const AppBar({
+    super.key,
+    required this.theme,
+  });
+
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        CircleAvatar(
+          radius: 25,
+          backgroundColor:
+              theme.colorScheme.onPrimaryFixedVariant,
+          backgroundImage: appUser.profilePic.isNotEmpty
+              ? NetworkImage(appUser.profilePic)
+              : null,
+          child: appUser.profilePic.isEmpty
+              ? Text(
+                  '${appUser.name[0]}${appUser.nameLast[0]}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                )
+              : null,
+        ),
+        IconButton(
+          icon: Icon(
+              Icons.settings_rounded), // or any icon you want
+          onPressed: () {
+            Navigator.pushNamed(context, '/settings');
+          },
+        )
+      ],
     );
   }
 }
