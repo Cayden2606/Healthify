@@ -27,6 +27,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String _currentLanguage = 'English';
+  String initial = '';
   void _languageChange(String? value) {
     setState(() {
       _currentLanguage = value!;
@@ -154,6 +155,12 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     ];
 
+    if (appUser.nameLast[0].isNotEmpty) {
+      initial = '${appUser.name[0]}${appUser.nameLast[0]}';
+    } else {
+      initial = appUser.name[0];
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -189,41 +196,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
-            // Card(
-            //   margin:
-            //       const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-            //   color: _theme.colorScheme.surfaceBright,
-            //   child: ListTile(
-            //     contentPadding:
-            //         const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            //     leading: CircleAvatar(
-            //       radius: 30, // Larger profile picture
-            //       backgroundColor: Colors.green,
-            //       child: Text(
-            //         '${_userFirstName[0]}${_userLastName[0]}',
-            //         style: TextStyle(
-            //           color: Colors.white,
-            //           fontWeight: FontWeight.bold,
-            //           fontSize: 20,
-            //         ),
-            //       ),
-            //     ),
-            //     title: Text(
-            //       '$_userFirstName $_userLastName',
-            //       style:
-            //           _theme.textTheme.headlineMedium!.copyWith(fontSize: 16),
-            //     ),
-            //     subtitle: Text(
-            //       _userPhoneNumber,
-            //       style: _theme.textTheme.bodySmall,
-            //     ),
-            //     trailing: Icon(Icons.keyboard_arrow_down),
-            //     onTap: () {
-            //       // TODO: GO TO THE USER PAGE
-            //     },
-            //   ),
-            // ),
-
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: InkWell(
@@ -248,7 +220,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             : null,
                         child: appUser.profilePic.isEmpty
                             ? Text(
-                                '${appUser.name[0]}${appUser.nameLast[0]}',
+                                initial,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
