@@ -27,6 +27,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     'Northeast',
     'Southeast',
   ];
+
+
   String _selectedRegion = 'Central';
 
   // Current Location GPS
@@ -126,7 +128,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   }
 
   Future<List<Marker>> get markerList async {
-    List<Clinic> clinicsList = await ApiCalls().fetchClinics();
+    List<Clinic> clinicsList = await ApiCalls().fetchClinics(_selectedRegion);
 
     List<Marker> markersList = [
       // current locaiton marker
@@ -140,7 +142,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         child: Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Color(0xEE0757ff),
+            color: Color.fromARGB(237, 14, 204, 39),
             border: Border.all(
               color: Colors.white,
               width: 3,
@@ -169,7 +171,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color.fromARGB(237, 1, 204, 69),
+                color: Color.fromARGB(237, 4, 233, 81),
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
