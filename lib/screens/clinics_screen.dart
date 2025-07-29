@@ -108,7 +108,22 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     }
   }
 
-
+  void _showCitiesDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CitiesSelectionDialog(
+          regions: _regions,
+          selectedRegion: _selectedRegion,
+          onRegionSelected: (String region) {
+            setState(() {
+              _selectedRegion = region;
+            });
+          },
+        );
+      },
+    );
+  }
 
   int selectedButtonIndex = 0;
   final DraggableScrollableController _controller =
@@ -124,14 +139,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     ColorScheme colorScheme = theme.colorScheme;
     bool isDarkMode = theme.brightness == Brightness.dark;
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(
-      //     'Clinics',
-      //     style: TextStyle(fontSize: 28),
-      //     maxLines: 1,
-      //     overflow: TextOverflow.ellipsis,
-      //   ),
-      // ),
       bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 1),
       body: Stack(
         key: _stackKey,
@@ -181,7 +188,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                           ),
                         ),
                       ),
-
                     ],
                   ),
                 if (_currentLocation != null)
@@ -206,16 +212,12 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // SizedBox(height: 20),
-
                   SearchBar(
                       isDarkMode: isDarkMode,
                       colorScheme: colorScheme,
                       theme: theme),
                   SizedBox(height: 16),
-
                   Row(
-                    // TODO: Add actual filtering, popup menus etc.
                     children: [
                       _buildNavButton(0, Icons.location_on, 'Nearby'),
                       SizedBox(width: 8),
@@ -235,7 +237,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
             bottom: math.min((_stackHeight * _liveSheetSize) + 24, 550),
             child: FloatingActionButton(
               shape: const CircleBorder(),
-              // mini: true,
               onPressed: _isLoadingLocation ? null : _getCurrentLocation,
               backgroundColor: theme.colorScheme.surface,
               foregroundColor: theme.colorScheme.onSurface,
@@ -324,7 +325,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              "TODO",
+                              _selectedRegion,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.onPrimary,
                                 fontSize: 12,
@@ -358,6 +359,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           setState(() {
             selectedButtonIndex = index;
           });
+
+          // Show dialog when Cities button is tapped
+          if (index == 1) {
+            _showCitiesDialog();
+          }
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -373,12 +379,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                 offset: const Offset(0, 2),
               ),
             ],
-            // border: Border.all(
-            //   color: isSelected
-            //       ? colorScheme.primary
-            //       : colorScheme.outlineVariant, // light/dark adaptive border
-            //   width: 1,
-            // ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -388,7 +388,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                 size: 20,
                 color: isSelected
                     ? colorScheme.onPrimary
-                    : colorScheme.onSurfaceVariant, // text color based on mode
+                    : colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 2),
               Text(
@@ -406,6 +406,343 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         ),
       ),
     );
+  }
+}
+
+class CitiesSelectionDialog extends StatefulWidget {
+  final List<String> regions;
+  final String selectedRegion;
+  final Function(String) onRegionSelected;
+
+  const CitiesSelectionDialog({
+    Key? key,
+    required this.regions,
+    required this.selectedRegion,
+    required this.onRegionSelected,
+  }) : super(key: key);
+
+  @override
+  State<CitiesSelectionDialog> createState() => _CitiesSelectionDialogState();
+}
+
+class _CitiesSelectionDialogState extends State<CitiesSelectionDialog>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+  String _tempSelectedRegion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _tempSelectedRegion = widget.selectedRegion;
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    ));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return FadeTransition(
+          opacity: _fadeAnimation,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: ScaleTransition(
+              scale: _scaleAnimation,
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: 320,
+                  maxHeight: 490,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.shadow.withValues(alpha: 0.15),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.location_city,
+                              size: 28,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Select Region',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Choose your preferred region to find nearby clinics',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Region List
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: widget.regions.length,
+                        itemBuilder: (context, index) {
+                          final region = widget.regions[index];
+                          final isSelected = region == _tempSelectedRegion;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () {
+                                  setState(() {
+                                    _tempSelectedRegion = region;
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? colorScheme.primaryContainer
+                                        : colorScheme.surfaceContainerHighest
+                                            .withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? colorScheme.primary
+                                          : Colors.transparent,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? colorScheme.primary
+                                              : colorScheme
+                                                  .surfaceContainerHighest,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          _getRegionIcon(region),
+                                          size: 20,
+                                          color: isSelected
+                                              ? colorScheme.onPrimary
+                                              : colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              region,
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: isSelected
+                                                    ? colorScheme
+                                                        .onPrimaryContainer
+                                                    : colorScheme.onSurface,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${_getRegionDescription(region)} Singapore',
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                color: isSelected
+                                                    ? colorScheme
+                                                        .onPrimaryContainer
+                                                        .withValues(alpha: 0.8)
+                                                    : colorScheme
+                                                        .onSurfaceVariant,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Icon(
+                                          Icons.check_circle,
+                                          color: colorScheme.primary,
+                                          size: 24,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    // Action Buttons
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                side: BorderSide(
+                                  color: colorScheme.outline,
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () {
+                                widget.onRegionSelected(_tempSelectedRegion);
+                                Navigator.of(context).pop();
+                              },
+                              style: FilledButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                backgroundColor: colorScheme.primary,
+                              ),
+                              child: Text(
+                                'Apply',
+                                style: TextStyle(
+                                  color: colorScheme.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  IconData _getRegionIcon(String region) {
+    switch (region.toLowerCase()) {
+      case 'central':
+        return Icons.business;
+      case 'northwest':
+        return Icons.landscape;
+      case 'southwest':
+        return Icons.water;
+      case 'northeast':
+        return Icons.wb_sunny;
+      case 'southeast':
+        return Icons.factory;
+      default:
+        return Icons.location_on;
+    }
+  }
+
+  String _getRegionDescription(String region) {
+    switch (region.toLowerCase()) {
+      case 'central':
+        return 'Central & CBD areas of';
+      case 'northwest':
+        return 'Northwestern districts of';
+      case 'southwest':
+        return 'Southwestern areas of';
+      case 'northeast':
+        return 'Northeastern regions of';
+      case 'southeast':
+        return 'Southeastern districts of';
+      default:
+        return 'Areas of';
+    }
   }
 }
 
@@ -429,9 +766,6 @@ class SearchBar extends StatelessWidget {
             ? colorScheme.surface.withValues(alpha: 0.9)
             : colorScheme.surface,
         borderRadius: BorderRadius.circular(50),
-        // border: Border.all(
-        //   color: colorScheme.outline.withValues(alpha: 0.3),
-        // ),
         boxShadow: [
           BoxShadow(
             color: colorScheme.shadow.withValues(alpha: 0.1),
@@ -457,7 +791,6 @@ class SearchBar extends StatelessWidget {
               fontWeight: FontWeight.w400,
             ),
             border: InputBorder.none,
-            // isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
           ),

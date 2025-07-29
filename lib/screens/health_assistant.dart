@@ -200,12 +200,15 @@ class _HealthAssistantState extends State<HealthAssistant> {
                         data: message.text,
                         selectable: true,
                         styleSheet: MarkdownStyleSheet(
+                          // Paragraph
                           p: textTheme.bodySmall?.copyWith(
                             color: message.user.id == currentUser.id
                                 ? colorScheme.onPrimary
                                 : colorScheme.onSurface,
-                            height: 1.1,
+                            height: 1.2,
                           ),
+
+                          // Inline code
                           code: textTheme.bodySmall?.copyWith(
                             backgroundColor: colorScheme.surfaceVariant,
                             fontFamily: 'monospace',
@@ -216,10 +219,12 @@ class _HealthAssistantState extends State<HealthAssistant> {
                             color: colorScheme.surfaceVariant,
                             borderRadius: BorderRadius.circular(8),
                           ),
+
+                          // Blockquote
                           blockquote: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                            color: colorScheme.onSurface.withOpacity(0.7),
                             fontStyle: FontStyle.italic,
-                            height: 1.1,
+                            height: 1.2,
                           ),
                           blockquoteDecoration: BoxDecoration(
                             border: Border(
@@ -229,15 +234,14 @@ class _HealthAssistantState extends State<HealthAssistant> {
                               ),
                             ),
                           ),
-                          h1: textTheme.headlineLarge?.copyWith(
-                            color: colorScheme.primary,
-                          ),
-                          h2: textTheme.headlineMedium?.copyWith(
-                            color: colorScheme.primary,
-                          ),
-                          h3: textTheme.headlineSmall?.copyWith(
-                            color: colorScheme.primary,
-                          ),
+
+                          // Headings
+                          h1: textTheme.headlineLarge
+                              ?.copyWith(color: colorScheme.primary),
+                          h2: textTheme.headlineMedium
+                              ?.copyWith(color: colorScheme.primary),
+                          h3: textTheme.headlineSmall
+                              ?.copyWith(color: colorScheme.primary),
                           h4: textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: colorScheme.onSurface,
@@ -250,6 +254,8 @@ class _HealthAssistantState extends State<HealthAssistant> {
                             fontWeight: FontWeight.w400,
                             color: colorScheme.onSurface,
                           ),
+
+                          // Emphasis
                           strong: textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             height: 1.1,
@@ -258,14 +264,27 @@ class _HealthAssistantState extends State<HealthAssistant> {
                             fontStyle: FontStyle.italic,
                             height: 1.1,
                           ),
+
+                          // Lists
                           listBullet: textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurface,
                             height: 1.1,
                           ),
+                          listBulletPadding: EdgeInsets.zero,
+                          listIndent: 16,
+
+                          // Tables
                           tableHead: textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                           tableBody: textTheme.bodySmall,
+                          tableCellsPadding: const EdgeInsets.symmetric(
+                            vertical: 6,
+                            horizontal: 12,
+                          ),
+
+                          // General spacing
+                          blockSpacing: 8, // reduce gap between blocks
                         ),
                       ),
                     ],
