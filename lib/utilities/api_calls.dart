@@ -18,20 +18,32 @@ class ApiCalls {
         '515c3679cb78005a4059e207c2b16152f53ff00101f901a3773a0000000000c00209920309536f75746865617374',
   };
 
-  Future<List<Clinic>> fetchClinics() async {
+  Future<List<Clinic>> fetchClinics(String region) async {
+    Map<String, String> _regions = {
+      'Central' : "place:519c88615f55f65940596b30687cba35f53ff00101f901a0773a0000000000c00206",
+      'Northwest' : "place:51f0969c9714f259405947f8286dbb4af63ff00101f901a2773a0000000000c00206",
+      'Southwest' : "place:51be2bc776e4ec59405936464662ddb3f43ff00101f901a4773a0000000000c00206",
+      'Northeast' : "place:51648d49af5bfb5940590c1f11532209f63ff00101f901a1773a0000000000c00206",
+      'Southeast' : "place:519ef1776492005a40592d4d00b49c5af53ff00101f901a3773a0000000000c00206",
+    };
+
+    if (!_regions.containsKey(region)) {
+      throw Exception('Invalid region: $region');
+    }
+
     final String apiKey = dotenv.env['GEOAPIFY_API_KEY']!;
     final String baseURL = 'https://api.geoapify.com/v2/places';
 
     Map<String, String> queryParams = {
       "categories": "healthcare.clinic_or_praxis",
-      "filter": "place:5164e2bd2f5cfb594059cd6bad0dfe09f63ff00101f901a1773a0000000000c002099203094e6f72746865617374",
+      "filter": _regions[region]!,
       "limit": "20",
       'apiKey': apiKey,
     };
 
     String queryString = Uri(queryParameters: queryParams).query;
     final response = await http.get(
-      Uri.parse('${baseURL}?${queryString}'),
+      Uri.parse('$baseURL?$queryString'),
     );
 
     if (response.statusCode == 200) {

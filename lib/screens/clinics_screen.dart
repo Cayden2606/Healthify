@@ -125,6 +125,69 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     );
   }
 
+  Future<List<Marker>> get markerList async {
+    List<Clinic> clinicsList = await ApiCalls().fetchClinics();
+
+    List<Marker> markersList = [
+      // current locaiton marker
+      Marker(
+        point: _currentLocation!,
+        width: 20,
+        height: 20,
+        alignment: Alignment.center,
+        // Keep marker upright regardless of map rotation
+        rotate: false,
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color(0xEE0757ff),
+            border: Border.all(
+              color: Colors.white,
+              width: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 6,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
+      ),
+      ...clinicsList.map((clinic) {
+        return Marker(
+          point: LatLng(clinic.lat, clinic.lon),
+          width: 20,
+          height: 20,
+          alignment: Alignment.center,
+          rotate: false,
+          child: GestureDetector(
+            onTap: () {
+              _selectedClinic = clinic;
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color.fromARGB(237, 1, 204, 69),
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    ];
+
+    return markersList;
+  }
+
   int selectedButtonIndex = 0;
   final DraggableScrollableController _controller =
       DraggableScrollableController();
@@ -161,34 +224,21 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                   userAgentPackageName: 'com.example.healthify',
                 ),
                 if (_currentLocation != null)
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: _currentLocation!,
-                        width: 20,
-                        height: 20,
-                        alignment: Alignment.center,
-                        // Keep marker upright regardless of map rotation
-                        rotate: false,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xEE0757ff),
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 3,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  FutureBuilder<List<Marker>>(
+                    future: markerList,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      }
+                      if (snapshot.hasError || !snapshot.hasData) {
+                        return ErrorWidget(
+                          'Error loading markers: ${snapshot.error}',
+                        );
+                      }
+                      return MarkerLayer(
+                        markers: snapshot.data!,
+                      );
+                    },
                   ),
                 if (_currentLocation != null)
                   CircleLayer(
