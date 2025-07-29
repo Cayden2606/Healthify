@@ -63,7 +63,7 @@ class _HealthAssistantState extends State<HealthAssistant> {
                     : null,
                 child: appUser.profilePic.isEmpty
                     ? Text(
-                        '${appUser.name[0]}${appUser.nameLast[0]}',
+                        '${appUser.name.isNotEmpty ? appUser.name[0] : ''}${appUser.nameLast.isNotEmpty ? appUser.nameLast[0] : ''}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

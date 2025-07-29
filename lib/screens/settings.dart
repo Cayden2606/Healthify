@@ -27,7 +27,10 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String _currentLanguage = 'English';
-  String initial = '';
+
+  final initials =
+      '${appUser.name.isNotEmpty ? appUser.name[0] : ''}${appUser.nameLast.isNotEmpty ? appUser.nameLast[0] : ''}';
+
   void _languageChange(String? value) {
     setState(() {
       _currentLanguage = value!;
@@ -155,12 +158,6 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     ];
 
-    if (appUser.nameLast[0].isNotEmpty) {
-      initial = '${appUser.name[0]}${appUser.nameLast[0]}';
-    } else {
-      initial = appUser.name[0];
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -220,7 +217,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             : null,
                         child: appUser.profilePic.isEmpty
                             ? Text(
-                                initial,
+                                initials,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,

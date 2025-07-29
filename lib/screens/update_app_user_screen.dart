@@ -126,10 +126,8 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                   backgroundColor: Colors.transparent,
                 );
               } else {
-                final initials = (firstNameController.text.isNotEmpty &&
-                        lastNameController.text.isNotEmpty)
-                    ? '${firstNameController.text[0]}${lastNameController.text[0]}'
-                    : '';
+                final initials =
+                    '${firstNameController.text.isNotEmpty ? firstNameController.text[0] : ''}${lastNameController.text.isNotEmpty ? lastNameController.text[0] : ''}';
                 displayAvatar = CircleAvatar(
                   radius: 54,
                   backgroundColor: theme.colorScheme.onPrimaryFixedVariant,
@@ -182,170 +180,197 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(36, 0, 36, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
-                          child: TextField(
-                            style: theme.textTheme.headlineSmall,
-                            textAlign: TextAlign.left,
-                            decoration: InputDecoration(
-                              labelText: 'First Name',
-                              labelStyle: theme.textTheme.bodyMedium,
-                              border: const OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(16))),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+                            child: TextFormField(
+                              style: theme.textTheme.headlineSmall,
+                              textAlign: TextAlign.left,
+                              decoration: InputDecoration(
+                                labelText: 'First Name *',
+                                labelStyle: theme.textTheme.bodyMedium,
+                                border: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(16))),
+                              ),
+                              controller: firstNameController,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'First name is required';
+                                }
+                                return null;
+                              },
                             ),
-                            controller: firstNameController,
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
-                          child: TextField(
-                            style: theme.textTheme.headlineSmall,
-                            textAlign: TextAlign.left,
-                            decoration: InputDecoration(
-                              labelText: 'Last Name',
-                              labelStyle: theme.textTheme.bodyMedium,
-                              border: const OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(16))),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
+                            child: TextFormField(
+                              style: theme.textTheme.headlineSmall,
+                              textAlign: TextAlign.left,
+                              decoration: InputDecoration(
+                                labelText: 'Last Name (Optional)',
+                                labelStyle: theme.textTheme.bodyMedium,
+                                border: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(16))),
+                              ),
+                              controller: lastNameController,
                             ),
-                            controller: lastNameController,
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
-                          child: PhoneInput(
-                            style: theme.textTheme.headlineSmall,
-                            countryCodeStyle: theme.textTheme.headlineSmall,
-                            controller: phoneController,
-                            defaultCountry: IsoCode.SG,
-                            flagShape: BoxShape.rectangle,
-                            showArrow: true,
-                            flagSize: 20,
-                            decoration: InputDecoration(
-                              labelText: 'Phone (Mobile)',
-                              labelStyle: theme.textTheme.bodyMedium,
-                              border: const OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(16))),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
+                            child: PhoneInput(
+                              style: theme.textTheme.headlineSmall,
+                              countryCodeStyle: theme.textTheme.headlineSmall,
+                              controller: phoneController,
+                              defaultCountry: IsoCode.SG,
+                              flagShape: BoxShape.rectangle,
+                              showArrow: true,
+                              flagSize: 20,
+                              decoration: InputDecoration(
+                                labelText: 'Phone (Mobile) *',
+                                labelStyle: theme.textTheme.bodyMedium,
+                                border: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(16))),
+                              ),
+                              validator: PhoneValidator.compose([
+                                PhoneValidator.required(),
+                                PhoneValidator.valid(),
+                              ]),
+                              countrySelectorNavigator:
+                                  CountrySelectorNavigator.searchDelegate(
+                                      countryNameStyle:
+                                          theme.textTheme.headlineSmall,
+                                      countryCodeStyle:
+                                          theme.textTheme.headlineSmall),
+                              scrollPhysics: BouncingScrollPhysics(),
                             ),
-                            validator: PhoneValidator.compose([
-                              PhoneValidator.required(),
-                              PhoneValidator.valid(),
-                            ]),
-                            countrySelectorNavigator:
-                                CountrySelectorNavigator.searchDelegate(
-                                    countryNameStyle:
-                                        theme.textTheme.headlineSmall,
-                                    countryCodeStyle:
-                                        theme.textTheme.headlineSmall),
-                            scrollPhysics: BouncingScrollPhysics(),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 1,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 8.0),
-                                  child: TextField(
-                                    style: theme.textTheme.headlineSmall,
-                                    textAlign: TextAlign.left,
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                      labelText: 'Age',
-                                      labelStyle: theme.textTheme.bodyMedium,
-                                      border: const OutlineInputBorder(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(16))),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: TextFormField(
+                                      style: theme.textTheme.headlineSmall,
+                                      textAlign: TextAlign.left,
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        labelText: 'Age *',
+                                        labelStyle: theme.textTheme.bodyMedium,
+                                        border: const OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(16))),
+                                      ),
+                                      controller: ageController,
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return 'Age is required';
+                                        }
+                                        final age = int.tryParse(value);
+                                        if (age == null ||
+                                            age < 1 ||
+                                            age > 120) {
+                                          return 'Please enter a valid age (1-120)';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    controller: ageController,
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 8.0),
-                                  child: DropdownButtonFormField<String>(
-                                    decoration: InputDecoration(
-                                      labelText: 'Gender',
-                                      labelStyle: theme.textTheme.bodyMedium,
-                                      border: const OutlineInputBorder(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(16))),
+                                Expanded(
+                                  flex: 2,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: DropdownButtonFormField<String>(
+                                      decoration: InputDecoration(
+                                        labelText: 'Gender (Optional)',
+                                        labelStyle: theme.textTheme.bodyMedium,
+                                        border: const OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(16))),
+                                      ),
+                                      value: genderController.text.isEmpty
+                                          ? null
+                                          : genderController.text,
+                                      items: const [
+                                        DropdownMenuItem(
+                                            value: 'Male', child: Text('Male')),
+                                        DropdownMenuItem(
+                                            value: 'Female',
+                                            child: Text('Female')),
+                                        DropdownMenuItem(
+                                            value: 'Other',
+                                            child: Text('Other')),
+                                        DropdownMenuItem(
+                                            value: 'Prefer not to say',
+                                            child: Text(
+                                              'Prefer not to say',
+                                            )),
+                                      ],
+                                      onChanged: (String? value) {
+                                        genderController.text = value ?? '';
+                                      },
                                     ),
-                                    value: genderController.text.isEmpty
-                                        ? null
-                                        : genderController.text,
-                                    items: const [
-                                      DropdownMenuItem(
-                                          value: 'Male', child: Text('Male')),
-                                      DropdownMenuItem(
-                                          value: 'Female',
-                                          child: Text('Female')),
-                                      DropdownMenuItem(
-                                          value: 'Other', child: Text('Other')),
-                                      DropdownMenuItem(
-                                          value: 'Prefer not to say',
-                                          child: Text(
-                                            'Prefer not to say',
-                                          )),
-                                    ],
-                                    onChanged: (String? value) {
-                                      genderController.text = value ?? '';
-                                    },
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(45),
-                              backgroundColor:
-                                  theme.colorScheme.primaryContainer),
-                          onPressed: () async {
-                            FocusScope.of(context).unfocus();
-                            String phoneNumber =
-                                phoneController.value?.international ?? '';
+                          SizedBox(
+                            height: 8,
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(45),
+                                backgroundColor:
+                                    theme.colorScheme.primaryContainer),
+                            onPressed: () async {
+                              if (!_formKey.currentState!.validate()) {
+                                return;
+                              }
 
-                            // Upload image if selected
-                            String? uploadedUrl;
-                            if (tempImage != null) {
-                              uploadedUrl =
-                                  await uploadToCloudinary(tempImage!);
-                            }
+                              FocusScope.of(context).unfocus();
+                              String phoneNumber =
+                                  phoneController.value?.international ?? '';
 
-                            // Create and save the updated user
-                            appUser = AppUser(
-                              name: firstNameController.text,
-                              nameLast: lastNameController.text,
-                              email: auth.currentUser?.email ?? "",
-                              userid: auth.currentUser?.uid ?? "",
-                              contact: phoneNumber,
-                              age: ageController.text,
-                              gender: genderController.text,
-                              profilePic: removePic
-                                  ? ''
-                                  : (uploadedUrl ?? appUser.profilePic),
-                            );
+                              // Upload image if selected
+                              String? uploadedUrl;
+                              if (tempImage != null) {
+                                uploadedUrl =
+                                    await uploadToCloudinary(tempImage!);
+                              }
 
-                            await FirebaseCalls().updateAppUser(appUser);
-                            Navigator.pushReplacementNamed(context, '/home');
-                          },
-                          child: const Text('Save'),
-                        ),
-                      ],
+                              // Create and save the updated user
+                              appUser = AppUser(
+                                name: firstNameController.text,
+                                nameLast: lastNameController.text,
+                                email: auth.currentUser?.email ?? "",
+                                userid: auth.currentUser?.uid ?? "",
+                                contact: phoneNumber,
+                                age: ageController.text.toString(),
+                                gender: genderController.text,
+                                profilePic: removePic
+                                    ? ''
+                                    : (uploadedUrl ?? appUser.profilePic),
+                              );
+
+                              await FirebaseCalls().updateAppUser(appUser);
+                              Navigator.pushReplacementNamed(context, '/home');
+                            },
+                            child: const Text('Save'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

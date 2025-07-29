@@ -261,14 +261,13 @@ class AppBar extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 25,
-          backgroundColor:
-              theme.colorScheme.onPrimaryFixedVariant,
+          backgroundColor: theme.colorScheme.onPrimaryFixedVariant,
           backgroundImage: appUser.profilePic.isNotEmpty
               ? NetworkImage(appUser.profilePic)
               : null,
           child: appUser.profilePic.isEmpty
               ? Text(
-                  '${appUser.name[0]}${appUser.nameLast[0]}',
+                  '${appUser.name.isNotEmpty ? appUser.name[0] : ''}${appUser.nameLast.isNotEmpty ? appUser.nameLast[0] : ''}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -278,8 +277,7 @@ class AppBar extends StatelessWidget {
               : null,
         ),
         IconButton(
-          icon: Icon(
-              Icons.settings_rounded), // or any icon you want
+          icon: Icon(Icons.settings_rounded), // or any icon you want
           onPressed: () {
             Navigator.pushNamed(context, '/settings');
           },
