@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
+import 'package:healthify/screens/appointments_screen.dart';
 import 'package:healthify/screens/settings.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:pedometer/pedometer.dart';
@@ -299,55 +300,70 @@ class UpcomingScheduleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 130,
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.secondaryContainer,
-            colorScheme.secondaryContainer.withValues(alpha: 0.7),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+    return Material(
+      color: Colors.transparent, // So the gradient shows through
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.2),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AppointmentsScreen(),
+            ),
+          );
+        },
+        child: Container(
+          height: 130,
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                colorScheme.secondaryContainer,
+                colorScheme.secondaryContainer.withAlpha(180),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: colorScheme.outline.withAlpha(50),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withAlpha(80),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 32,
+                color: colorScheme.onSecondaryContainer,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "No appointments today",
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: colorScheme.onSecondaryContainer,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Tap to schedule",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSecondaryContainer.withAlpha(200),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.calendar_today_outlined,
-            size: 32,
-            color: colorScheme.onSecondaryContainer,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "No appointments today",
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: colorScheme.onSecondaryContainer,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Tap to schedule",
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSecondaryContainer.withValues(alpha: 0.8),
-              fontSize: 12,
-            ),
-          ),
-        ],
       ),
     );
   }

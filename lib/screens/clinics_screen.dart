@@ -457,6 +457,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 distance,
                                 displaySpecialty,
                                 displayHours,
+                                clinic.lat,
+                                clinic.lon,
                                 phone: clinic.phone,
                                 website: clinic.website,
                                 isOpen: isOpen,
@@ -495,7 +497,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   }
 
   Widget buildClinicCard(BuildContext context, String name, String distance,
-      String specialties, String openingHours,
+      String specialties, String openingHours, double lat, double lon,
       {String? phone, String? website, bool isOpen = false}) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -503,202 +505,165 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
     print(openingHours);
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      // padding: EdgeInsets.fromLTRB(0, 16, 0, 16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: isDark ? 0.3 : 0.1),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        _mapController.move(
+            LatLng(lat, lon), 17.0); // <-- this line "teleports"
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16),
+        // padding: EdgeInsets.fromLTRB(0, 16, 0, 16),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.outline.withValues(alpha: 0.2),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Clinic icon with theme colors
-          // Container(
-          //   width: 56,
-          //   height: 56,
-          //   decoration: BoxDecoration(
-          //     color: colorScheme.primaryContainer,
-          //     borderRadius: BorderRadius.circular(12),
-          //   ),
-          //   child: Icon(
-          //     Icons.local_hospital,
-          //     color: colorScheme.primary,
-          //     size: 28,
-          //   ),
-          // ),
-          // SizedBox(width: 16),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: isDark ? 0.3 : 0.1),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Clinic icon with theme colors
+            // Container(
+            //   width: 56,
+            //   height: 56,
+            //   decoration: BoxDecoration(
+            //     color: colorScheme.primaryContainer,
+            //     borderRadius: BorderRadius.circular(12),
+            //   ),
+            //   child: Icon(
+            //     Icons.local_hospital,
+            //     color: colorScheme.primary,
+            //     size: 28,
+            //   ),
+            // ),
+            // SizedBox(width: 16),
 
-          // Clinic details
-          Expanded(
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 5),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                          fontSize: 16,
+            // Clinic details
+            Expanded(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 5),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            fontSize: 16,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 6),
-                      // Distance
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 14,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            distance,
-                            style: theme.textTheme.bodySmall?.copyWith(
+                        SizedBox(height: 6),
+                        // Distance
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              size: 14,
                               color: colorScheme.onSurfaceVariant,
-                              fontSize: 13,
                             ),
-                          ),
-                          // SizedBox(height: 4),
-                          // Specialty
-                          Text(
-                            " • ",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              fontSize: 10,
-                            ),
-                          ),
-                          Text(
-                            specialties,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 6),
-                      // Opening hours with proper status
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            size: 12,
-                            color: isOpen
-                                ? (isDark
-                                    ? Colors.green[400]
-                                    : Colors.green[600])
-                                : (isDark ? Colors.red[400] : Colors.red[600]),
-                          ),
-                          SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              openingHours,
-                              softWrap: true,
+                            SizedBox(width: 4),
+                            Text(
+                              distance,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: isOpen
-                                    ? (isDark
-                                        ? Colors.green[400]
-                                        : Colors.green[600])
-                                    : (isDark
-                                        ? Colors.red[400]
-                                        : Colors.red[600]),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 13,
                               ),
-                              maxLines: 2,
+                            ),
+                            // SizedBox(height: 4),
+                            // Specialty
+                            Text(
+                              " • ",
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 10,
+                              ),
+                            ),
+                            Text(
+                              specialties,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 0, 0, 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(width: 16),
-                          // Appointment button
-                          Container(
-                            height: 36,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              color: colorScheme.primaryContainer,
+                          ],
+                        ),
+
+                        SizedBox(height: 6),
+                        // Opening hours with proper status
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 12,
+                              color: isOpen
+                                  ? (isDark
+                                      ? Colors.green[400]
+                                      : Colors.green[600])
+                                  : (isDark
+                                      ? Colors.red[400]
+                                      : Colors.red[600]),
                             ),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(18),
-                              onTap: () {
-                                // Make appointment functionality
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.calendar_month,
-                                      size: 16,
-                                      color: colorScheme.onPrimaryContainer,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Appointment',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: colorScheme.onPrimaryContainer,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
+                            SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                openingHours,
+                                softWrap: true,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: isOpen
+                                      ? (isDark
+                                          ? Colors.green[400]
+                                          : Colors.green[600])
+                                      : (isDark
+                                          ? Colors.red[400]
+                                          : Colors.red[600]),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          ),
-
-                          // Phone button (if phone exists)
-                          if (phone != null && phone.isNotEmpty) ...[
-                            SizedBox(width: 8),
+                          ],
+                        ),
+                        SizedBox(height: 4),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 0, 0, 16),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(width: 16),
+                            // Appointment button
                             Container(
                               height: 36,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(18),
-                                color: colorScheme.secondaryContainer,
+                                color: colorScheme.primaryContainer,
                               ),
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(18),
-                                onTap: () async {
-                                  final Uri phoneUri =
-                                      Uri(scheme: 'tel', path: phone);
-                                  if (await canLaunchUrl(phoneUri)) {
-                                    await launchUrl(phoneUri);
-                                  }
+                                onTap: () {
+                                  // Make appointment functionality
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(
@@ -707,43 +672,130 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
-                                        Icons.phone,
+                                        Icons.calendar_month,
                                         size: 16,
-                                        color: colorScheme.onSecondaryContainer,
+                                        color: colorScheme.onPrimaryContainer,
                                       ),
                                       SizedBox(width: 6),
                                       Text(
-                                        'Call',
+                                        'Appointment',
                                         style: TextStyle(
                                           fontSize: 12,
+                                          color: colorScheme.onPrimaryContainer,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Phone button (if phone exists)
+                            if (phone != null && phone.isNotEmpty) ...[
+                              SizedBox(width: 8),
+                              Container(
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  color: colorScheme.secondaryContainer,
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(18),
+                                  onTap: () async {
+                                    final Uri phoneUri =
+                                        Uri(scheme: 'tel', path: phone);
+                                    if (await canLaunchUrl(phoneUri)) {
+                                      await launchUrl(phoneUri);
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.phone,
+                                          size: 16,
                                           color:
                                               colorScheme.onSecondaryContainer,
-                                          fontWeight: FontWeight.w500,
                                         ),
-                                      ),
-                                    ],
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'Call',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: colorScheme
+                                                .onSecondaryContainer,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
 
-                          // Website button (if website exists)
-                          if (website != null && website.isNotEmpty) ...[
+                            // Website button (if website exists)
+                            if (website != null && website.isNotEmpty) ...[
+                              SizedBox(width: 8),
+                              Container(
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  color: colorScheme.tertiaryContainer,
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(18),
+                                  onTap: () async {
+                                    final Uri websiteUri = Uri.parse(website);
+                                    if (await canLaunchUrl(websiteUri)) {
+                                      await launchUrl(websiteUri);
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.language_outlined,
+                                          size: 16,
+                                          color:
+                                              colorScheme.onTertiaryContainer,
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'Website',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color:
+                                                colorScheme.onTertiaryContainer,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+
+                            // Saved button
                             SizedBox(width: 8),
                             Container(
                               height: 36,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(18),
-                                color: colorScheme.tertiaryContainer,
+                                color: colorScheme.surfaceVariant,
                               ),
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(18),
-                                onTap: () async {
-                                  final Uri websiteUri = Uri.parse(website);
-                                  if (await canLaunchUrl(websiteUri)) {
-                                    await launchUrl(websiteUri);
-                                  }
+                                onTap: () {
+                                  // Add to saved functionality
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(
@@ -752,17 +804,16 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
-                                        Icons.language_outlined,
+                                        Icons.bookmark,
                                         size: 16,
-                                        color: colorScheme.onTertiaryContainer,
+                                        color: colorScheme.onSurfaceVariant,
                                       ),
                                       SizedBox(width: 6),
                                       Text(
-                                        'Website',
+                                        'Saved',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color:
-                                              colorScheme.onTertiaryContainer,
+                                          color: colorScheme.onSurfaceVariant,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -771,58 +822,19 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 ),
                               ),
                             ),
+                            SizedBox(width: 16),
                           ],
-
-                          // Saved button
-                          SizedBox(width: 8),
-                          Container(
-                            height: 36,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              color: colorScheme.surfaceVariant,
-                            ),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(18),
-                              onTap: () {
-                                // Add to saved functionality
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.bookmark,
-                                      size: 16,
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Saved',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: colorScheme.onSurfaceVariant,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
-          // Action buttons
-        ],
+            // Action buttons
+          ],
+        ),
       ),
     );
   }
