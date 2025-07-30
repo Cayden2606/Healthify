@@ -12,6 +12,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' as math;
 
+import 'make_appointments_screen.dart';
+
 class ClinicsScreen extends StatefulWidget {
   const ClinicsScreen({Key? key}) : super(key: key);
 
@@ -23,6 +25,8 @@ late Future<List<Clinic>> _clinicsFuture;
 late Future<List<Marker>> _markersFuture;
 
 class _ClinicsScreenState extends State<ClinicsScreen> {
+  List<Clinic> _loadedClinics = [];
+
   List<String> _regions = [
     'Central',
     'Northwest',
@@ -31,7 +35,18 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     'Southeast',
   ];
 
+  List<String> _searchBy = [
+    'Search by Distance',
+    'Search by Region',
+    'Saved Clinics',
+    'Search by Open Status',
+  ];
+
   String _selectedRegion = 'Central';
+  String _selectedSearch = 'Search by Distance';
+
+  // Saved Clinics
+  Set<String> _savedClinicPlaceIds = {};
 
   // Current Location GPS
   LatLng? _currentLocation;
@@ -48,6 +63,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
   final DraggableScrollableController _controller =
       DraggableScrollableController();
+
+  ScrollController? _clinicListScrollController;
 
   @override
   void initState() {
@@ -194,7 +211,28 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           onTap: () {
             setState(() {
               _selectedClinic = clinic;
+
+              final clickedIndex = _loadedClinics.indexWhere(
+                  (c) => c.lat == clinic.lat && c.lon == clinic.lon);
+              if (clickedIndex != -1) {
+                final clickedClinic = _loadedClinics.removeAt(clickedIndex);
+                _loadedClinics.insert(0, clickedClinic);
+              }
             });
+            _mapController.move(LatLng(clinic.lat, clinic.lon), 17.0);
+
+            _controller.animateTo(
+              0.30,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOut,
+            );
+
+            // Scroll list to top
+            _clinicListScrollController?.animateTo(
+              0,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOut,
+            );
           },
           child: Container(
             width: 35,
@@ -310,6 +348,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
               minChildSize: 0.2,
               maxChildSize: 0.95,
               builder: (context, scrollController) {
+                _clinicListScrollController ??= scrollController;
                 return Container(
                   // Your sheet decoration and content
                   decoration: BoxDecoration(
@@ -351,7 +390,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Search by Distance',
+                            _selectedSearch,
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -395,7 +434,23 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 child: Text("No clinics found."));
                           }
 
-                          final clinics = snapshot.data!;
+                          final allClinics = snapshot.data!;
+                          List<Clinic> clinics = allClinics;
+
+                          _loadedClinics = allClinics;
+
+                          if (_selectedSearch == "Saved") {
+                            clinics = clinics
+                                .where((clinic) => _savedClinicPlaceIds
+                                    .contains(clinic.placeId))
+                                .toList();
+                          }
+
+                          if (clinics.isEmpty) {
+                            return const Center(
+                                child: Text("No saved clinics."));
+                          }
+
                           return Column(
                             children: clinics.map((clinic) {
                               final distance = _currentLocation != null
@@ -428,6 +483,12 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               }
 
                               String displaySpecialty = clinic.speciality;
+
+                              if (clinic.name
+                                  .toLowerCase()
+                                  .contains("polyclinic")) {
+                                displaySpecialty = "Polyclinic";
+                              }
                               if (displaySpecialty.isEmpty) {
                                 if (clinic.name
                                     .toLowerCase()
@@ -459,6 +520,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 displayHours,
                                 clinic.lat,
                                 clinic.lon,
+                                clinic.placeId,
                                 phone: clinic.phone,
                                 website: clinic.website,
                                 isOpen: isOpen,
@@ -496,19 +558,50 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     return degrees * (math.pi / 180);
   }
 
-  Widget buildClinicCard(BuildContext context, String name, String distance,
-      String specialties, String openingHours, double lat, double lon,
-      {String? phone, String? website, bool isOpen = false}) {
+  Widget buildClinicCard(
+      BuildContext context,
+      String name,
+      String distance,
+      String specialties,
+      String openingHours,
+      double lat,
+      double lon,
+      String placeId,
+      {String? phone,
+      String? website,
+      bool isOpen = false}) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final isSaved = _savedClinicPlaceIds.contains(placeId);
 
-    print(openingHours);
+    // print(openingHours);
 
     return GestureDetector(
       onTap: () {
-        _mapController.move(
-            LatLng(lat, lon), 17.0); // <-- this line "teleports"
+        _mapController.move(LatLng(lat, lon), 17.0);
+
+        // Reorder list: move this clinic to the top
+        setState(() {
+          final clickedIndex = _loadedClinics.indexWhere(
+              (c) => c.lat == lat && c.lon == lon); // match by coordinates
+          if (clickedIndex != -1) {
+            final clickedClinic = _loadedClinics.removeAt(clickedIndex);
+            _loadedClinics.insert(0, clickedClinic);
+          }
+        });
+
+        _controller.animateTo(
+          0.30,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+        );
+
+        _clinicListScrollController?.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 16),
@@ -639,12 +732,12 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
+                        // SizedBox(height: 4),
                       ],
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(0, 0, 0, 16),
+                    padding: EdgeInsets.fromLTRB(0, 0, 0, 12),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: SingleChildScrollView(
@@ -653,87 +746,104 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SizedBox(width: 16),
+
                             // Appointment button
-                            Container(
-                              height: 36,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                color: colorScheme.primaryContainer,
-                              ),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(18),
-                                onTap: () {
-                                  // Make appointment functionality
-                                },
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.calendar_month,
-                                        size: 16,
-                                        color: colorScheme.onPrimaryContainer,
-                                      ),
-                                      SizedBox(width: 6),
-                                      Text(
-                                        'Appointment',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: colorScheme.onPrimaryContainer,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                            FilledButton.tonal(
+                              onPressed: () {
+                                // Make appointment functionality
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          MakeAppointmentsScreen()),
+                                );
+                              },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: colorScheme.primaryContainer,
+                                foregroundColor: colorScheme.onPrimaryContainer,
+                                minimumSize: Size(0, 36),
+                                maximumSize: Size(double.infinity, 36),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
                                 ),
+                                elevation: 0,
+                                shadowColor: Colors.transparent,
+                                textStyle: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.calendar_month,
+                                    size: 16,
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Appointment',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: colorScheme.onPrimaryContainer,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
 
                             // Phone button (if phone exists)
                             if (phone != null && phone.isNotEmpty) ...[
                               SizedBox(width: 8),
-                              Container(
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(18),
-                                  color: colorScheme.secondaryContainer,
-                                ),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(18),
-                                  onTap: () async {
-                                    final Uri phoneUri =
-                                        Uri(scheme: 'tel', path: phone);
-                                    if (await canLaunchUrl(phoneUri)) {
-                                      await launchUrl(phoneUri);
-                                    }
-                                  },
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 8),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.phone,
-                                          size: 16,
-                                          color:
-                                              colorScheme.onSecondaryContainer,
-                                        ),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'Call',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: colorScheme
-                                                .onSecondaryContainer,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              FilledButton.tonal(
+                                onPressed: () async {
+                                  final Uri phoneUri =
+                                      Uri(scheme: 'tel', path: phone);
+                                  if (await canLaunchUrl(phoneUri)) {
+                                    await launchUrl(phoneUri);
+                                  }
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor:
+                                      colorScheme.secondaryContainer,
+                                  foregroundColor:
+                                      colorScheme.onSecondaryContainer,
+                                  minimumSize: Size(0, 36),
+                                  maximumSize: Size(double.infinity, 36),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
                                   ),
+                                  elevation: 0,
+                                  shadowColor: Colors.transparent,
+                                  textStyle: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.phone,
+                                      size: 16,
+                                      color: colorScheme.onSecondaryContainer,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Call',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onSecondaryContainer,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -741,85 +851,95 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                             // Website button (if website exists)
                             if (website != null && website.isNotEmpty) ...[
                               SizedBox(width: 8),
-                              Container(
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(18),
-                                  color: colorScheme.tertiaryContainer,
-                                ),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(18),
-                                  onTap: () async {
-                                    final Uri websiteUri = Uri.parse(website);
-                                    if (await canLaunchUrl(websiteUri)) {
-                                      await launchUrl(websiteUri);
-                                    }
-                                  },
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 8),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.language_outlined,
-                                          size: 16,
-                                          color:
-                                              colorScheme.onTertiaryContainer,
-                                        ),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'Website',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color:
-                                                colorScheme.onTertiaryContainer,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              FilledButton.tonal(
+                                onPressed: () async {
+                                  final Uri websiteUri = Uri.parse(website);
+                                  if (await canLaunchUrl(websiteUri)) {
+                                    await launchUrl(websiteUri);
+                                  }
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor:
+                                      colorScheme.tertiaryContainer,
+                                  foregroundColor:
+                                      colorScheme.onTertiaryContainer,
+                                  minimumSize: Size(0, 36),
+                                  maximumSize: Size(double.infinity, 36),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
                                   ),
+                                  elevation: 0,
+                                  shadowColor: Colors.transparent,
+                                  textStyle: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.language_outlined,
+                                      size: 16,
+                                      color: colorScheme.onTertiaryContainer,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Website',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onTertiaryContainer,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
 
                             // Saved button
                             SizedBox(width: 8),
-                            Container(
-                              height: 36,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                color: colorScheme.surfaceVariant,
-                              ),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(18),
-                                onTap: () {
-                                  // Add to saved functionality
-                                },
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.bookmark,
-                                        size: 16,
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                      SizedBox(width: 6),
-                                      Text(
-                                        'Saved',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: colorScheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                            FilledButton.tonal(
+                              onPressed: () {
+                                setState(() {
+                                  if (isSaved) {
+                                    _savedClinicPlaceIds.remove(placeId);
+                                  } else {
+                                    _savedClinicPlaceIds.add(placeId);
+                                  }
+                                });
+                              },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: colorScheme.surfaceVariant,
+                                foregroundColor: colorScheme.onSurfaceVariant,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
                                 ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isSaved
+                                        ? Icons.bookmark
+                                        : Icons.bookmark_border,
+                                    size: 16,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isSaved ? 'Saved' : 'Save',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             SizedBox(width: 16),
@@ -827,7 +947,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                         ),
                       ),
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
@@ -868,6 +988,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           if (index == 1) {
             _showCitiesDialog();
           }
+          _selectedSearch = _searchBy[index];
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 6),
