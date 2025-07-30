@@ -41,6 +41,12 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   final GlobalKey _stackKey = GlobalKey();
   double _stackHeight = 0.0;
 
+  // Use a ValueNotifier to hold the FAB's bottom position.
+  // This allows only the AnimatedBuilder to rebuild when it changes.
+  final ValueNotifier<double> _fabBottomNotifier = ValueNotifier<double>(16.0); // Initial position
+
+  final DraggableScrollableController _controller = DraggableScrollableController();
+
   @override
   void initState() {
     super.initState();
@@ -51,11 +57,18 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final RenderBox? box = _stackKey.currentContext?.findRenderObject() as RenderBox?;
       if (box != null) {
-        setState(() {
-          _stackHeight = box.size.height;
-        });
+        _stackHeight = box.size.height;
+        // Set initial FAB position relative to initial sheet size
+        _fabBottomNotifier.value = (_stackHeight * _controller.size) + 24;
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _fabBottomNotifier.dispose(); // Don't forget to dispose
+    super.dispose();
   }
 
   Future<void> _getCurrentLocation() async {
@@ -201,7 +214,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   }
 
   int selectedButtonIndex = 0;
-  final DraggableScrollableController _controller = DraggableScrollableController();
 
   double _liveSheetSize = 0.35;
 
@@ -212,20 +224,21 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     ThemeData theme = Theme.of(context);
     ColorScheme colorScheme = theme.colorScheme;
     bool isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
       bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 1),
       body: Stack(
-        key: _stackKey,
+        key: _stackKey, // Keep the key here to measure stack height once
         children: [
           Positioned.fill(
             child: ClinicMap(
                 mapController: _mapController,
                 currentLocation: _currentLocation,
-                markerList: _markersFuture), // <-- Pass the state variable here  
+                markerList: _markersFuture),
           ),
           SafeArea(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -249,79 +262,85 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
               ),
             ),
           ),
-          Positioned(
-            right: 16,
-            bottom: math.min((_stackHeight * _liveSheetSize) + 24, 550),
-            child: FloatingActionButton(
-              shape: const CircleBorder(),
-              onPressed: _isLoadingLocation ? null : _getCurrentLocation,
-              backgroundColor: theme.colorScheme.surface,
-              foregroundColor: theme.colorScheme.onSurface,
-              elevation: 4,
-              child: _isLoadingLocation
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.primary,
-                        ),
-                      ),
-                    )
-                  : Icon(Icons.my_location, size: 25),
-            ),
+          // The AnimatedBuilder rebuilds ONLY the FAB when _fabBottomNotifier changes.
+          AnimatedBuilder(
+            animation: _fabBottomNotifier,
+            builder: (context, child) {
+              return Positioned(
+                right: 16,
+                // Use the notifier's value for the bottom position
+                // Apply the same `math.min` logic if 550 is a desired maximum offset.
+                bottom: math.min(_fabBottomNotifier.value, 550), // Ensure max 550, or adjust
+                child: FloatingActionButton(
+                  shape: const CircleBorder(),
+                  onPressed: _isLoadingLocation ? null : _getCurrentLocation,
+                  backgroundColor: theme.colorScheme.surface,
+                  foregroundColor: theme.colorScheme.onSurface,
+                  elevation: 4,
+                  child: _isLoadingLocation
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              theme.colorScheme.primary,
+                            ),
+                          ),
+                        )
+                      : const Icon(Icons.my_location, size: 25),
+                ),
+              );
+            },
           ),
-          DraggableScrollableSheet(
-            controller: _controller,
-            initialChildSize: 0.35,
-            minChildSize: 0.2,
-            maxChildSize: 0.95,
-            builder: (context, scrollController) {
-              return NotificationListener<DraggableScrollableNotification>(
-                onNotification: (notification) {
-                  final RenderBox? box = _stackKey.currentContext
-                      ?.findRenderObject() as RenderBox?;
-                  if (box != null) {
-                    setState(() {
-                      _stackHeight = box.size.height;
-                      _liveSheetSize = notification.extent;
-                    });
-                  }
-                  return true;
-                },
-                child: Container(
+
+          // Move NotificationListener OUTSIDE the DraggableScrollableSheet's builder
+          NotificationListener<DraggableScrollableNotification>(
+            onNotification: (notification) {
+              // Update the FAB's position based on sheet extent
+              // _stackHeight should be already calculated and mostly static
+              _fabBottomNotifier.value = (notification.extent * _stackHeight) + 24;
+              return false; // Crucially, return false to allow notifications to continue (if needed by other listeners)
+                            // or true if you want to consume it here. Returning true is fine if no other
+                            // parent needs this specific notification.
+            },
+            child: DraggableScrollableSheet(
+              controller: _controller,
+              initialChildSize: 0.35,
+              minChildSize: 0.2,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                return Container(
+                  // Your sheet decoration and content
                   decoration: BoxDecoration(
                     color: Theme.of(context).scaffoldBackgroundColor,
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(24)),
+                        const BorderRadius.vertical(top: Radius.circular(24)),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context)
-                            .shadowColor
-                            .withValues(alpha: 0.2),
+                        color: Theme.of(context).shadowColor.withOpacity(0.2), // Use withOpacity
                         blurRadius: 12,
                         spreadRadius: 2,
-                        offset: Offset(0, -2),
+                        offset: const Offset(0, -2),
                       ),
                     ],
                   ),
                   child: ListView(
                     controller: scrollController,
-                    physics: ClampingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    physics: const ClampingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
                       Center(
                         child: Container(
                           margin:
-                              EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+                              const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
                           width: 40,
                           height: 4.5,
                           decoration: BoxDecoration(
                             color: Theme.of(context)
                                 .colorScheme
                                 .secondary
-                                .withValues(alpha: 0.6),
+                                .withOpacity(0.6),
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
@@ -331,13 +350,13 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                         children: [
                           Text(
                             'Search by Distance',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.primary,
@@ -354,7 +373,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       // Add more widgets here if needed
                       //
 
@@ -362,16 +381,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                         future: _clinicsFuture,
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator()
-                            );
+                            return const Center(child: CircularProgressIndicator());
                           } else if (snapshot.hasError) {
-                            return Center(
-                                child: Text("Error: ${snapshot.error}"));
-                          } else if (!snapshot.hasData ||
-                              snapshot.data!.isEmpty) {
-                            return const Center(
-                                child: Text("No clinics found."));
+                            return Center(child: Text("Error: ${snapshot.error}"));
+                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                            return const Center(child: Text("No clinics found."));
                           }
 
                           final clinics = snapshot.data!;
@@ -381,40 +395,22 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   ? "${_calculateDistance(_currentLocation!.latitude, _currentLocation!.longitude, clinic.lat, clinic.lon).toStringAsFixed(1)} km"
                                   : "Unknown";
 
-                              // Parse opening hours using the new parser
-                              OpeningHours openingHours =
-                                  OpeningHours.parse(clinic.openingHours);
-
-                              // Get status and hours text
+                              OpeningHours openingHours = OpeningHours.parse(clinic.openingHours);
                               String statusText = openingHours.getStatusText();
-                              String todayHoursText =
-                                  openingHours.getTodayHoursText();
+                              String todayHoursText = openingHours.getTodayHoursText();
                               bool isOpen = openingHours.isOpenNow();
+                              String displayHours = "$statusText • $todayHoursText";
 
-                              // Create display text
-                              String displayHours =
-                                  "$statusText • $todayHoursText";
-
-                              // Handle specialty display
                               String displaySpecialty = clinic.speciality;
                               if (displaySpecialty.isEmpty) {
-                                if (clinic.name
-                                    .toLowerCase()
-                                    .contains("family")) {
+                                if (clinic.name.toLowerCase().contains("family")) {
                                   displaySpecialty = "Family Medicine";
-                                } else if (clinic.name
-                                    .toLowerCase()
-                                    .contains("surgery")) {
+                                } else if (clinic.name.toLowerCase().contains("surgery")) {
                                   displaySpecialty = "General Surgery";
-                                } else if (clinic.name
-                                    .toLowerCase()
-                                    .contains("polyclinic")) {
+                                } else if (clinic.name.toLowerCase().contains("polyclinic")) {
                                   displaySpecialty = "Polyclinic";
-                                } else if (clinic.name
-                                    .toLowerCase()
-                                    .contains("tcm")) {
-                                  displaySpecialty =
-                                      "Traditional Chinese Medicine";
+                                } else if (clinic.name.toLowerCase().contains("tcm")) {
+                                  displaySpecialty = "Traditional Chinese Medicine";
                                 } else {
                                   displaySpecialty = "Medical Clinic";
                                 }
@@ -428,7 +424,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 displayHours,
                                 phone: clinic.phone,
                                 website: clinic.website,
-                                isOpen: isOpen, // Pass the open status
+                                isOpen: isOpen,
                               );
                             }).toList(),
                           );
@@ -436,9 +432,9 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                       ),
                     ],
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -1362,8 +1358,7 @@ class OpeningHours {
     if (isAlwaysClosed) return false;
 
     int weekday = dateTime.weekday;
-    TimeOfDay currentTime =
-        TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
+    TimeOfDay currentTime = TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
 
     // Check if today has opening hours
     List<TimeRange>? todayHours = weekdayHours[weekday];
@@ -1461,7 +1456,7 @@ class OpeningHours {
       String phHours = publicHolidayHours
           .map((range) =>
               "${_formatTime(range.start)}-${_formatTime(range.end)}")
-          .join(", ");
+              .join(", ");
       schedule.add("Public Holidays: $phHours");
     }
 
