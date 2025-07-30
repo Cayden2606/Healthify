@@ -770,10 +770,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 ),
                                 elevation: 0,
                                 shadowColor: Colors.transparent,
-                                textStyle: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                // textStyle: TextStyle(
+                                //   fontSize: 12,
+                                //   fontWeight: FontWeight.w500,
+                                // ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -821,10 +821,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   ),
                                   elevation: 0,
                                   shadowColor: Colors.transparent,
-                                  textStyle: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  // textStyle: TextStyle(
+                                  //   fontSize: 12,
+                                  //   fontWeight: FontWeight.w500,
+                                  // ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -872,10 +872,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   ),
                                   elevation: 0,
                                   shadowColor: Colors.transparent,
-                                  textStyle: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  // textStyle: TextStyle(
+                                  //   fontSize: 12,
+                                  //   fontWeight: FontWeight.w500,
+                                  // ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
