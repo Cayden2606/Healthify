@@ -19,6 +19,8 @@ class ClinicsScreen extends StatefulWidget {
   State<ClinicsScreen> createState() => _ClinicsScreenState();
 }
 
+late Future<List<Clinic>> _clinicsFuture;
+
 class _ClinicsScreenState extends State<ClinicsScreen> {
   List<String> _regions = [
     'Central',
@@ -27,7 +29,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     'Northeast',
     'Southeast',
   ];
-
 
   String _selectedRegion = 'Central';
 
@@ -43,6 +44,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final RenderBox? box =
@@ -171,7 +173,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color.fromARGB(237, 4, 233, 81),
+                color: Color.fromARGB(237, 233, 4, 4),
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
@@ -273,11 +275,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                     children: [
                       _buildNavButton(0, Icons.location_on, 'Nearby'),
                       SizedBox(width: 8),
-                      _buildNavButton(1, Icons.location_city, 'Cities'),
+                      _buildNavButton(1, Icons.location_city, 'Regions'),
                       SizedBox(width: 8),
                       _buildNavButton(2, Icons.bookmark, 'Saved'),
                       SizedBox(width: 8),
-                      _buildNavButton(3, Icons.favorite, 'Favs'),
+                      _buildNavButton(3, Icons.store, 'Open'),
                     ],
                   ),
                 ],
@@ -346,17 +348,19 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                     physics: ClampingScrollPhysics(),
                     padding: EdgeInsets.symmetric(horizontal: 20),
                     children: [
-                      Container(
-                        margin:
-                            EdgeInsets.symmetric(vertical: 12, horizontal: 145),
-                        width: 10,
-                        height: 4.5,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .secondary
-                              .withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(3),
+                      Center(
+                        child: Container(
+                          margin:
+                              EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+                          width: 40,
+                          height: 4.5,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .secondary
+                                .withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
                         ),
                       ),
                       Row(
@@ -389,6 +393,110 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                       ),
                       SizedBox(height: 20),
                       // Add more widgets here if needed
+                      //
+                      buildClinicCard(
+                        context,
+                        "One Doctors Family Clinic",
+                        "2.1 km", // Calculate from coordinates
+                        "Family Medicine, General", // Or parse from categories
+                        "W" ?? "Hours not available",
+                        phone: "W",
+                      ),
+                      FutureBuilder<List<Clinic>>(
+                        future: _clinicsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Center(
+                                child: Text("Error: ${snapshot.error}"));
+                          } else if (!snapshot.hasData ||
+                              snapshot.data!.isEmpty) {
+                            return const Center(
+                                child: Text("No clinics found."));
+                          }
+
+                          final clinics = snapshot.data!;
+                          return Column(
+                            children: clinics.map((clinic) {
+                              final distance = _currentLocation != null
+                                  ? "${_calculateDistance(_currentLocation!.latitude, _currentLocation!.longitude, clinic.lat, clinic.lon).toStringAsFixed(1)} km"
+                                  : "Unknown";
+
+                              final now = DateTime.now();
+                              final currentTimeMinutes =
+                                  now.hour * 60 + now.minute;
+
+                              // Attempt to parse opening hours in the format "HH:MM-HH:MM"
+                              int openMinutes = 540; // Default 9:00 AM
+                              int closeMinutes = 1260; // Default 9:00 PM
+                              print(
+                                  "Opening hours raw: ${clinic.openingHours}");
+
+                              if (clinic.openingHours.contains('-')) {
+                                final parts = clinic.openingHours.split('-');
+                                if (parts.length == 2) {
+                                  final openParts = parts[0].trim().split(':');
+                                  final closeParts = parts[1].trim().split(':');
+
+                                  if (openParts.length == 2 &&
+                                      closeParts.length == 2) {
+                                    final openHour = int.tryParse(openParts[0]);
+                                    final openMinute =
+                                        int.tryParse(openParts[1]);
+                                    final closeHour =
+                                        int.tryParse(closeParts[0]);
+                                    final closeMinute =
+                                        int.tryParse(closeParts[1]);
+
+                                    if (openHour != null &&
+                                        openMinute != null &&
+                                        closeHour != null &&
+                                        closeMinute != null) {
+                                      openMinutes = openHour * 60 + openMinute;
+                                      closeMinutes =
+                                          closeHour * 60 + closeMinute;
+                                    }
+                                  }
+                                }
+                              }
+
+                              final isOpen =
+                                  currentTimeMinutes >= openMinutes &&
+                                      currentTimeMinutes <= closeMinutes;
+                              final displayHours =
+                                  isOpen ? "Open Now" : "Closed";
+
+                              String displaySpecialty = clinic.speciality;
+                              if (displaySpecialty.isEmpty) {
+                                if (clinic.name
+                                    .toLowerCase()
+                                    .contains("family")) {
+                                  displaySpecialty = "Family Medicine";
+                                } else if (clinic.name
+                                    .toLowerCase()
+                                    .contains("surgery")) {
+                                  displaySpecialty = "General Surgery";
+                                } else {
+                                  displaySpecialty = "Medical Clinic";
+                                }
+                              }
+
+                              return buildClinicCard(
+                                context,
+                                clinic.name,
+                                distance,
+                                displaySpecialty,
+                                "${displayHours} • ${clinic.openingHours.isNotEmpty ? clinic.openingHours : '09:00-21:00'}",
+                                phone: clinic.phone,
+                                website: clinic.website,
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -398,6 +506,191 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         ],
       ),
     );
+  }
+
+  double _calculateDistance(
+      double lat1, double lon1, double lat2, double lon2) {
+    const double earthRadius = 6371;
+    double dLat = _degreesToRadians(lat2 - lat1);
+    double dLon = _degreesToRadians(lon2 - lon1);
+    double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_degreesToRadians(lat1)) *
+            math.cos(_degreesToRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  double _degreesToRadians(double degrees) {
+    return degrees * (math.pi / 180);
+  }
+
+  Widget buildClinicCard(BuildContext context, String name, String distance,
+      String specialties, String openingHours,
+      {String? phone, String? website}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Parse opening hours to determine if open now
+    bool isOpenNow = _isClinicOpenNow(openingHours);
+    String displayHours = isOpenNow ? "Open Now" : "Closed";
+    displayHours = "${displayHours} • 9:00 AM - 9:00PM";
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: isDark ? 0.3 : 0.1),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Clinic icon with theme colors
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.local_hospital,
+              color: colorScheme.primary,
+              size: 28,
+            ),
+          ),
+          SizedBox(width: 16),
+
+          // Clinic details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                SizedBox(height: 6),
+                // Distance only (no rating)
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      size: 14,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      distance,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4),
+                // Healthcare category instead of specialties
+                Text(
+                  specialties, // Or derive from categories in JSON
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+                SizedBox(height: 4),
+                // Opening hours with proper icon
+                Row(
+                  children: [
+                    Icon(
+                      isOpenNow ? Icons.schedule : Icons.schedule,
+                      size: 12,
+                      color: isOpenNow
+                          ? (isDark ? Colors.green[400] : Colors.green[600])
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      displayHours,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isOpenNow
+                            ? (isDark ? Colors.green[400] : Colors.green[600])
+                            : colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Action buttons - only show phone if available
+          Column(
+            children: [
+              Container(
+                width: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colorScheme.surfaceVariant,
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.favorite_border, size: 16),
+                  onPressed: () {},
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (phone != null) ...[
+                SizedBox(height: 4),
+                Container(
+                  width: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.primaryContainer,
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.phone, size: 16),
+                    onPressed: () {
+                      // Launch phone dialer
+                    },
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+// Helper function to parse opening hours
+  bool _isClinicOpenNow(String openingHours) {
+    // Parse opening_hours format like "Mo-Sa 09:00-21:00; PH,Su 09:00-17:00"
+    // This is a simplified version - you'd need more robust parsing
+    final now = DateTime.now();
+    final currentDay = now.weekday; // 1 = Monday, 7 = Sunday
+    final currentTime = now.hour * 60 + now.minute; // Minutes since midnight
+
+    // For demo purposes, return true if current time is between 8:00-20:00
+    // You should implement proper parsing of the opening_hours string
+    return currentTime >= 8 * 60 && currentTime <= 20 * 60;
   }
 
   Widget _buildNavButton(int index, IconData icon, String label) {
