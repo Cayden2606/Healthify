@@ -43,9 +43,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
   // Use a ValueNotifier to hold the FAB's bottom position.
   // This allows only the AnimatedBuilder to rebuild when it changes.
-  final ValueNotifier<double> _fabBottomNotifier = ValueNotifier<double>(16.0); // Initial position
+  final ValueNotifier<double> _fabBottomNotifier =
+      ValueNotifier<double>(16.0); // Initial position
 
-  final DraggableScrollableController _controller = DraggableScrollableController();
+  final DraggableScrollableController _controller =
+      DraggableScrollableController();
 
   @override
   void initState() {
@@ -55,7 +57,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     _markersFuture = _generateMarkers(_selectedRegion);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final RenderBox? box = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+      final RenderBox? box =
+          _stackKey.currentContext?.findRenderObject() as RenderBox?;
       if (box != null) {
         _stackHeight = box.size.height;
         // Set initial FAB position relative to initial sheet size
@@ -153,6 +156,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     if (_currentLocation != null) {
       markers.add(
         Marker(
+          // Current Location Marker
           point: _currentLocation!,
           width: 20,
           height: 20,
@@ -161,7 +165,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Color.fromARGB(237, 14, 204, 39),
+              color: Color.fromARGB(255, 12, 85, 252),
               border: Border.all(
                 color: Colors.white,
                 width: 3,
@@ -182,10 +186,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     markers.addAll(clinicsList.map((clinic) {
       return Marker(
         point: LatLng(clinic.lat, clinic.lon),
-        width: 20,
-        height: 20,
-        alignment: Alignment.center,
-        rotate: false,
+        width: 35,
+        height: 35,
+        alignment: Alignment.topCenter,
+        rotate: true,
         child: GestureDetector(
           onTap: () {
             setState(() {
@@ -193,17 +197,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
             });
           },
           child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color.fromARGB(237, 233, 4, 4),
-              border: Border.all(color: Colors.white, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
-                ),
-              ],
+            width: 35,
+            height: 35,
+            child: Image.asset(
+              'images/clinic_marker.png',
+              fit: BoxFit.contain,
             ),
           ),
         ),
@@ -270,7 +268,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                 right: 16,
                 // Use the notifier's value for the bottom position
                 // Apply the same `math.min` logic if 550 is a desired maximum offset.
-                bottom: math.min(_fabBottomNotifier.value, 550), // Ensure max 550, or adjust
+                bottom: math.min(
+                    _fabBottomNotifier.value, 550), // Ensure max 550, or adjust
                 child: FloatingActionButton(
                   shape: const CircleBorder(),
                   onPressed: _isLoadingLocation ? null : _getCurrentLocation,
@@ -299,10 +298,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
             onNotification: (notification) {
               // Update the FAB's position based on sheet extent
               // _stackHeight should be already calculated and mostly static
-              _fabBottomNotifier.value = (notification.extent * _stackHeight) + 24;
+              _fabBottomNotifier.value =
+                  (notification.extent * _stackHeight) + 24;
               return false; // Crucially, return false to allow notifications to continue (if needed by other listeners)
-                            // or true if you want to consume it here. Returning true is fine if no other
-                            // parent needs this specific notification.
+              // or true if you want to consume it here. Returning true is fine if no other
+              // parent needs this specific notification.
             },
             child: DraggableScrollableSheet(
               controller: _controller,
@@ -318,7 +318,9 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                         const BorderRadius.vertical(top: Radius.circular(24)),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context).shadowColor.withOpacity(0.2), // Use withOpacity
+                        color: Theme.of(context)
+                            .shadowColor
+                            .withOpacity(0.2), // Use withOpacity
                         blurRadius: 12,
                         spreadRadius: 2,
                         offset: const Offset(0, -2),
@@ -332,8 +334,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                     children: [
                       Center(
                         child: Container(
-                          margin:
-                              const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 0),
                           width: 40,
                           height: 4.5,
                           decoration: BoxDecoration(
@@ -380,12 +382,17 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                       FutureBuilder<List<Clinic>>(
                         future: _clinicsFuture,
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
                           } else if (snapshot.hasError) {
-                            return Center(child: Text("Error: ${snapshot.error}"));
-                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                            return const Center(child: Text("No clinics found."));
+                            return Center(
+                                child: Text("Error: ${snapshot.error}"));
+                          } else if (!snapshot.hasData ||
+                              snapshot.data!.isEmpty) {
+                            return const Center(
+                                child: Text("No clinics found."));
                           }
 
                           final clinics = snapshot.data!;
@@ -395,22 +402,50 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   ? "${_calculateDistance(_currentLocation!.latitude, _currentLocation!.longitude, clinic.lat, clinic.lon).toStringAsFixed(1)} km"
                                   : "Unknown";
 
-                              OpeningHours openingHours = OpeningHours.parse(clinic.openingHours);
+                              OpeningHours openingHours =
+                                  OpeningHours.parse(clinic.openingHours);
                               String statusText = openingHours.getStatusText();
-                              String todayHoursText = openingHours.getTodayHoursText();
+                              String todayHoursText =
+                                  openingHours.getTodayHoursText();
                               bool isOpen = openingHours.isOpenNow();
-                              String displayHours = "$statusText • $todayHoursText";
+                              String displayHours;
+                              if (isOpen) {
+                                // If open, show "Open Now • actual hours"
+                                displayHours = "$statusText • $todayHoursText";
+                              } else {
+                                // If closed, check if it has hours today or is permanently closed
+                                if (todayHoursText
+                                        .toLowerCase()
+                                        .contains("closed today") ||
+                                    todayHoursText
+                                        .toLowerCase()
+                                        .contains("closed")) {
+                                  displayHours = "Closed today";
+                                } else {
+                                  displayHours =
+                                      "Closed • Opens $todayHoursText";
+                                }
+                              }
 
                               String displaySpecialty = clinic.speciality;
                               if (displaySpecialty.isEmpty) {
-                                if (clinic.name.toLowerCase().contains("family")) {
+                                if (clinic.name
+                                    .toLowerCase()
+                                    .contains("family")) {
                                   displaySpecialty = "Family Medicine";
-                                } else if (clinic.name.toLowerCase().contains("surgery")) {
+                                } else if (clinic.name
+                                    .toLowerCase()
+                                    .contains("surgery")) {
                                   displaySpecialty = "General Surgery";
-                                } else if (clinic.name.toLowerCase().contains("polyclinic")) {
+                                } else if (clinic.name
+                                    .toLowerCase()
+                                    .contains("polyclinic")) {
                                   displaySpecialty = "Polyclinic";
-                                } else if (clinic.name.toLowerCase().contains("tcm")) {
-                                  displaySpecialty = "Traditional Chinese Medicine";
+                                } else if (clinic.name
+                                    .toLowerCase()
+                                    .contains("tcm")) {
+                                  displaySpecialty =
+                                      "Traditional Chinese Medicine";
                                 } else {
                                   displaySpecialty = "Medical Clinic";
                                 }
@@ -447,7 +482,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     double dLat = _degreesToRadians(lat2 - lat1);
     double dLon = _degreesToRadians(lon2 - lon1);
     double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-            math.cos(_degreesToRadians(lat1)) *
+        math.cos(_degreesToRadians(lat1)) *
             math.cos(_degreesToRadians(lat2)) *
             math.sin(dLon / 2) *
             math.sin(dLon / 2);
@@ -470,7 +505,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
     return Container(
       margin: EdgeInsets.only(bottom: 16),
-      padding: EdgeInsets.all(16),
+      // padding: EdgeInsets.fromLTRB(0, 16, 0, 16),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
@@ -488,158 +523,305 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
       child: Row(
         children: [
           // Clinic icon with theme colors
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.local_hospital,
-              color: colorScheme.primary,
-              size: 28,
-            ),
-          ),
-          SizedBox(width: 16),
+          // Container(
+          //   width: 56,
+          //   height: 56,
+          //   decoration: BoxDecoration(
+          //     color: colorScheme.primaryContainer,
+          //     borderRadius: BorderRadius.circular(12),
+          //   ),
+          //   child: Icon(
+          //     Icons.local_hospital,
+          //     color: colorScheme.primary,
+          //     size: 28,
+          //   ),
+          // ),
+          // SizedBox(width: 16),
 
           // Clinic details
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                    fontSize: 16, // Slightly smaller for better fit
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 6),
-                // Distance
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: 14,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      distance,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4),
-                // Specialty
-                Text(
-                  specialties,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4),
-                // Opening hours with proper status
-                Row(
-                  children: [
-                    Icon(
-                      Icons.schedule,
-                      size: 12,
-                      color: isOpen
-                          ? (isDark ? Colors.green[400] : Colors.green[600])
-                          : (isDark ? Colors.red[400] : Colors.red[600]),
-                    ),
-                    SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        openingHours,
-                        softWrap: true,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isOpen
-                              ? (isDark ? Colors.green[400] : Colors.green[600])
-                              : (isDark ? Colors.red[400] : Colors.red[600]),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 5),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                          fontSize: 16,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      SizedBox(height: 6),
+                      // Distance
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: 14,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            distance,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 13,
+                            ),
+                          ),
+                          // SizedBox(height: 4),
+                          // Specialty
+                          Text(
+                            " • ",
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 10,
+                            ),
+                          ),
+                          Text(
+                            specialties,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 6),
+                      // Opening hours with proper status
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.schedule,
+                            size: 12,
+                            color: isOpen
+                                ? (isDark
+                                    ? Colors.green[400]
+                                    : Colors.green[600])
+                                : (isDark ? Colors.red[400] : Colors.red[600]),
+                          ),
+                          SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              openingHours,
+                              softWrap: true,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isOpen
+                                    ? (isDark
+                                        ? Colors.green[400]
+                                        : Colors.green[600])
+                                    : (isDark
+                                        ? Colors.red[400]
+                                        : Colors.red[600]),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(width: 16),
+                          // Appointment button
+                          Container(
+                            height: 36,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                              color: colorScheme.primaryContainer,
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: () {
+                                // Make appointment functionality
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_month,
+                                      size: 16,
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Appointment',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onPrimaryContainer,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Phone button (if phone exists)
+                          if (phone != null && phone.isNotEmpty) ...[
+                            SizedBox(width: 8),
+                            Container(
+                              height: 36,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(18),
+                                color: colorScheme.secondaryContainer,
+                              ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(18),
+                                onTap: () async {
+                                  final Uri phoneUri =
+                                      Uri(scheme: 'tel', path: phone);
+                                  if (await canLaunchUrl(phoneUri)) {
+                                    await launchUrl(phoneUri);
+                                  }
+                                },
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.phone,
+                                        size: 16,
+                                        color: colorScheme.onSecondaryContainer,
+                                      ),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        'Call',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color:
+                                              colorScheme.onSecondaryContainer,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+
+                          // Website button (if website exists)
+                          if (website != null && website.isNotEmpty) ...[
+                            SizedBox(width: 8),
+                            Container(
+                              height: 36,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(18),
+                                color: colorScheme.tertiaryContainer,
+                              ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(18),
+                                onTap: () async {
+                                  final Uri websiteUri = Uri.parse(website);
+                                  if (await canLaunchUrl(websiteUri)) {
+                                    await launchUrl(websiteUri);
+                                  }
+                                },
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.language_outlined,
+                                        size: 16,
+                                        color: colorScheme.onTertiaryContainer,
+                                      ),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        'Website',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color:
+                                              colorScheme.onTertiaryContainer,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+
+                          // Saved button
+                          SizedBox(width: 8),
+                          Container(
+                            height: 36,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                              color: colorScheme.surfaceVariant,
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: () {
+                                // Add to saved functionality
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.bookmark,
+                                      size: 16,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Saved',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onSurfaceVariant,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
 
           // Action buttons
-          Column(
-            children: [
-              Container(
-                width: 36,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colorScheme.surfaceVariant,
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.favorite_border, size: 16),
-                  onPressed: () {
-                    // Add to favorites functionality
-                  },
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              if (phone != null && phone.isNotEmpty) ...[
-                SizedBox(height: 4),
-                Container(
-                  width: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colorScheme.primaryContainer,
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.phone, size: 16),
-                    onPressed: () async {
-                      final Uri phoneUri = Uri(scheme: 'tel', path: phone);
-                      if (await canLaunchUrl(phoneUri)) {
-                        await launchUrl(phoneUri);
-                      }
-                    },
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
-              if (website != null && website.isNotEmpty) ...[
-                SizedBox(height: 4),
-                Container(
-                  width: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colorScheme.secondaryContainer,
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.language, size: 16),
-                    onPressed: () async {
-                      final Uri websiteUri = Uri.parse(website);
-                      if (await canLaunchUrl(websiteUri)) {
-                        await launchUrl(websiteUri);
-                      }
-                    },
-                    color: colorScheme.onSecondaryContainer,
-                  ),
-                ),
-              ],
-            ],
-          ),
         ],
       ),
     );
@@ -725,7 +907,8 @@ class ClinicMap extends StatelessWidget {
     required MapController mapController,
     required LatLng? currentLocation,
     required this.markerList,
-  }) : _mapController = mapController, _currentLocation = currentLocation;
+  })  : _mapController = mapController,
+        _currentLocation = currentLocation;
 
   final MapController _mapController;
   final LatLng? _currentLocation;
@@ -736,7 +919,8 @@ class ClinicMap extends StatelessWidget {
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
-        initialCenter: _currentLocation ?? LatLng(1.3793, 103.8481), // fallback to NYP
+        initialCenter:
+            _currentLocation ?? LatLng(1.3793, 103.8481), // fallback to NYP
         initialZoom: 16,
         // Enable rotation
         interactionOptions: InteractionOptions(
@@ -1358,7 +1542,8 @@ class OpeningHours {
     if (isAlwaysClosed) return false;
 
     int weekday = dateTime.weekday;
-    TimeOfDay currentTime = TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
+    TimeOfDay currentTime =
+        TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
 
     // Check if today has opening hours
     List<TimeRange>? todayHours = weekdayHours[weekday];
@@ -1456,7 +1641,7 @@ class OpeningHours {
       String phHours = publicHolidayHours
           .map((range) =>
               "${_formatTime(range.start)}-${_formatTime(range.end)}")
-              .join(", ");
+          .join(", ");
       schedule.add("Public Holidays: $phHours");
     }
 
