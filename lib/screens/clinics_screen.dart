@@ -357,14 +357,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                       SizedBox(height: 20),
                       // Add more widgets here if needed
                       //
-                      buildClinicCard(
-                        context,
-                        "One Doctors Family Clinic",
-                        "2.1 km", // Calculate from coordinates
-                        "Family Medicine, General", // Or parse from categories
-                        "W" ?? "Hours not available",
-                        phone: "W",
-                      ),
+
                       FutureBuilder<List<Clinic>>(
                         future: _clinicsFuture,
                         builder: (context, snapshot) {
@@ -388,42 +381,21 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   ? "${_calculateDistance(_currentLocation!.latitude, _currentLocation!.longitude, clinic.lat, clinic.lon).toStringAsFixed(1)} km"
                                   : "Unknown";
 
-                              final now = DateTime.now();
-                              final currentTimeMinutes =
-                                  now.hour * 60 + now.minute;
+                              // Parse opening hours using the new parser
+                              OpeningHours openingHours =
+                                  OpeningHours.parse(clinic.openingHours);
 
-                              // Attempt to parse opening hours in the format "HH:MM-HH:MM"
-                              int openMinutes = 540; // Default 9:00 AM
-                              int closeMinutes = 1260; // Default 9:00 PM
-                              // print("Opening hours raw: ${clinic.openingHours}");
+                              // Get status and hours text
+                              String statusText = openingHours.getStatusText();
+                              String todayHoursText =
+                                  openingHours.getTodayHoursText();
+                              bool isOpen = openingHours.isOpenNow();
 
-                              if (clinic.openingHours.contains('-')) {
-                                final parts = clinic.openingHours.split('-');
-                                if (parts.length == 2) {
-                                  final openParts = parts[0].trim().split(':');
-                                  final closeParts = parts[1].trim().split(':');
+                              // Create display text
+                              String displayHours =
+                                  "$statusText • $todayHoursText";
 
-                                  if (openParts.length == 2 &&
-                                      closeParts.length == 2) {
-                                    final openHour = int.tryParse(openParts[0]);
-                                    final openMinute = int.tryParse(openParts[1]);
-                                    final closeHour = int.tryParse(closeParts[0]);
-                                    final closeMinute = int.tryParse(closeParts[1]);
-
-                                    if (openHour != null &&
-                                        openMinute != null &&
-                                        closeHour != null &&
-                                        closeMinute != null) {
-                                      openMinutes = openHour * 60 + openMinute;
-                                      closeMinutes = closeHour * 60 + closeMinute;
-                                    }
-                                  }
-                                }
-                              }
-
-                              final isOpen = currentTimeMinutes >= openMinutes && currentTimeMinutes <= closeMinutes;
-                              final displayHours = isOpen ? "Open Now" : "Closed";
-
+                              // Handle specialty display
                               String displaySpecialty = clinic.speciality;
                               if (displaySpecialty.isEmpty) {
                                 if (clinic.name
@@ -434,6 +406,15 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                     .toLowerCase()
                                     .contains("surgery")) {
                                   displaySpecialty = "General Surgery";
+                                } else if (clinic.name
+                                    .toLowerCase()
+                                    .contains("polyclinic")) {
+                                  displaySpecialty = "Polyclinic";
+                                } else if (clinic.name
+                                    .toLowerCase()
+                                    .contains("tcm")) {
+                                  displaySpecialty =
+                                      "Traditional Chinese Medicine";
                                 } else {
                                   displaySpecialty = "Medical Clinic";
                                 }
@@ -444,9 +425,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 clinic.name,
                                 distance,
                                 displaySpecialty,
-                                "${displayHours} • ${clinic.openingHours.isNotEmpty ? clinic.openingHours : '09:00-21:00'}",
+                                displayHours,
                                 phone: clinic.phone,
                                 website: clinic.website,
+                                isOpen: isOpen, // Pass the open status
                               );
                             }).toList(),
                           );
@@ -483,15 +465,12 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
   Widget buildClinicCard(BuildContext context, String name, String distance,
       String specialties, String openingHours,
-      {String? phone, String? website}) {
+      {String? phone, String? website, bool isOpen = false}) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    // Parse opening hours to determine if open now
-    bool isOpenNow = _isClinicOpenNow(openingHours);
-    String displayHours = isOpenNow ? "Open Now" : "Closed";
-    displayHours = "${displayHours} • 9:00 AM - 9:00PM";
+    print(openingHours);
 
     return Container(
       margin: EdgeInsets.only(bottom: 16),
@@ -538,10 +517,13 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.onSurface,
+                    fontSize: 16, // Slightly smaller for better fit
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 6),
-                // Distance only (no rating)
+                // Distance
                 Row(
                   children: [
                     Icon(
@@ -560,34 +542,41 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                   ],
                 ),
                 SizedBox(height: 4),
-                // Healthcare category instead of specialties
+                // Specialty
                 Text(
-                  specialties, // Or derive from categories in JSON
+                  specialties,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 4),
-                // Opening hours with proper icon
+                // Opening hours with proper status
                 Row(
                   children: [
                     Icon(
-                      isOpenNow ? Icons.schedule : Icons.schedule,
+                      Icons.schedule,
                       size: 12,
-                      color: isOpenNow
+                      color: isOpen
                           ? (isDark ? Colors.green[400] : Colors.green[600])
-                          : colorScheme.onSurfaceVariant,
+                          : (isDark ? Colors.red[400] : Colors.red[600]),
                     ),
                     SizedBox(width: 4),
-                    Text(
-                      displayHours,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isOpenNow
-                            ? (isDark ? Colors.green[400] : Colors.green[600])
-                            : colorScheme.onSurfaceVariant,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Text(
+                        openingHours,
+                        softWrap: true,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isOpen
+                              ? (isDark ? Colors.green[400] : Colors.green[600])
+                              : (isDark ? Colors.red[400] : Colors.red[600]),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -596,7 +585,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
             ),
           ),
 
-          // Action buttons - only show phone if available
+          // Action buttons
           Column(
             children: [
               Container(
@@ -607,11 +596,13 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                 ),
                 child: IconButton(
                   icon: Icon(Icons.favorite_border, size: 16),
-                  onPressed: () {},
+                  onPressed: () {
+                    // Add to favorites functionality
+                  },
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
-              if (phone != null) ...[
+              if (phone != null && phone.isNotEmpty) ...[
                 SizedBox(height: 4),
                 Container(
                   width: 36,
@@ -621,10 +612,33 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                   ),
                   child: IconButton(
                     icon: Icon(Icons.phone, size: 16),
-                    onPressed: () {
-                      // Launch phone dialer
+                    onPressed: () async {
+                      final Uri phoneUri = Uri(scheme: 'tel', path: phone);
+                      if (await canLaunchUrl(phoneUri)) {
+                        await launchUrl(phoneUri);
+                      }
                     },
                     color: colorScheme.primary,
+                  ),
+                ),
+              ],
+              if (website != null && website.isNotEmpty) ...[
+                SizedBox(height: 4),
+                Container(
+                  width: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.secondaryContainer,
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.language, size: 16),
+                    onPressed: () async {
+                      final Uri websiteUri = Uri.parse(website);
+                      if (await canLaunchUrl(websiteUri)) {
+                        await launchUrl(websiteUri);
+                      }
+                    },
+                    color: colorScheme.onSecondaryContainer,
                   ),
                 ),
               ],
@@ -1166,5 +1180,315 @@ class SearchBar extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class OpeningHours {
+  final Map<int, List<TimeRange>> weekdayHours;
+  final List<TimeRange> publicHolidayHours;
+  final bool isAlwaysOpen;
+  final bool isAlwaysClosed;
+
+  OpeningHours({
+    required this.weekdayHours,
+    required this.publicHolidayHours,
+    this.isAlwaysOpen = false,
+    this.isAlwaysClosed = false,
+  });
+
+  static OpeningHours parse(String openingHoursString) {
+    if (openingHoursString.isEmpty) {
+      return OpeningHours(
+        weekdayHours: {},
+        publicHolidayHours: [],
+        isAlwaysClosed: true,
+      );
+    }
+
+    // Handle 24/7 or always open cases
+    if (openingHoursString.toLowerCase().contains('24/7') ||
+        openingHoursString.toLowerCase().contains('always open')) {
+      return OpeningHours(
+        weekdayHours: {},
+        publicHolidayHours: [],
+        isAlwaysOpen: true,
+      );
+    }
+
+    Map<int, List<TimeRange>> weekdayHours = {};
+    List<TimeRange> publicHolidayHours = [];
+
+    // Split by semicolon to handle multiple rules
+    List<String> rules = openingHoursString.split(';');
+
+    for (String rule in rules) {
+      rule = rule.trim();
+      if (rule.isEmpty) continue;
+
+      try {
+        _parseRule(rule, weekdayHours, publicHolidayHours);
+      } catch (e) {
+        print('Error parsing opening hours rule: $rule - $e');
+      }
+    }
+
+    return OpeningHours(
+      weekdayHours: weekdayHours,
+      publicHolidayHours: publicHolidayHours,
+    );
+  }
+
+  static void _parseRule(String rule, Map<int, List<TimeRange>> weekdayHours,
+      List<TimeRange> publicHolidayHours) {
+    // Handle "off" or "closed" cases
+    if (rule.toLowerCase().contains('off') ||
+        rule.toLowerCase().contains('closed')) {
+      return;
+    }
+
+    // Split days and time parts
+    List<String> parts = rule.split(RegExp(r'\s+'));
+    if (parts.length < 2) return;
+
+    String daysPart = parts[0];
+    String timePart = parts.sublist(1).join(' ');
+
+    // Parse time ranges
+    List<TimeRange> timeRanges = _parseTimeRanges(timePart);
+    if (timeRanges.isEmpty) return;
+
+    // Handle Public Holidays
+    if (daysPart.contains('PH')) {
+      publicHolidayHours.addAll(timeRanges);
+      daysPart = daysPart.replaceAll('PH', '').replaceAll(',', '');
+    }
+
+    // Parse days
+    List<int> days = _parseDays(daysPart);
+    for (int day in days) {
+      weekdayHours[day] = (weekdayHours[day] ?? [])..addAll(timeRanges);
+    }
+  }
+
+  static List<TimeRange> _parseTimeRanges(String timePart) {
+    List<TimeRange> ranges = [];
+
+    // Handle multiple time ranges separated by comma
+    List<String> timeSlots = timePart.split(',');
+
+    for (String slot in timeSlots) {
+      slot = slot.trim();
+      if (slot.contains('-')) {
+        List<String> times = slot.split('-');
+        if (times.length == 2) {
+          TimeOfDay? start = _parseTime(times[0].trim());
+          TimeOfDay? end = _parseTime(times[1].trim());
+          if (start != null && end != null) {
+            ranges.add(TimeRange(start: start, end: end));
+          }
+        }
+      }
+    }
+
+    return ranges;
+  }
+
+  static List<int> _parseDays(String daysPart) {
+    List<int> days = [];
+
+    // Day abbreviations mapping (Monday = 1, Sunday = 7)
+    Map<String, int> dayMap = {
+      'mo': 1,
+      'tu': 2,
+      'we': 3,
+      'th': 4,
+      'fr': 5,
+      'sa': 6,
+      'su': 7
+    };
+
+    daysPart = daysPart.toLowerCase().replaceAll(',', ' ');
+    List<String> dayParts = daysPart.split(RegExp(r'\s+'));
+
+    for (String part in dayParts) {
+      part = part.trim();
+      if (part.isEmpty) continue;
+
+      if (part.contains('-')) {
+        // Handle day ranges like "mo-fr"
+        List<String> range = part.split('-');
+        if (range.length == 2) {
+          int? start = dayMap[range[0].trim()];
+          int? end = dayMap[range[1].trim()];
+          if (start != null && end != null) {
+            for (int i = start; i <= end; i++) {
+              days.add(i);
+            }
+          }
+        }
+      } else {
+        // Handle individual days
+        int? day = dayMap[part];
+        if (day != null) {
+          days.add(day);
+        }
+      }
+    }
+
+    return days;
+  }
+
+  static TimeOfDay? _parseTime(String timeStr) {
+    timeStr = timeStr.trim();
+    RegExp timeRegex = RegExp(r'^(\d{1,2}):(\d{2})$');
+    Match? match = timeRegex.firstMatch(timeStr);
+
+    if (match != null) {
+      int hour = int.parse(match.group(1)!);
+      int minute = int.parse(match.group(2)!);
+
+      if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+        return TimeOfDay(hour: hour, minute: minute);
+      }
+    }
+
+    return null;
+  }
+
+  bool isOpenNow([DateTime? dateTime]) {
+    dateTime ??= DateTime.now();
+
+    if (isAlwaysOpen) return true;
+    if (isAlwaysClosed) return false;
+
+    int weekday = dateTime.weekday;
+    TimeOfDay currentTime =
+        TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
+
+    // Check if today has opening hours
+    List<TimeRange>? todayHours = weekdayHours[weekday];
+    if (todayHours == null || todayHours.isEmpty) return false;
+
+    // Check if current time falls within any opening hours
+    for (TimeRange range in todayHours) {
+      if (_isTimeInRange(currentTime, range)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool _isTimeInRange(TimeOfDay time, TimeRange range) {
+    int timeMinutes = time.hour * 60 + time.minute;
+    int startMinutes = range.start.hour * 60 + range.start.minute;
+    int endMinutes = range.end.hour * 60 + range.end.minute;
+
+    // Handle cases where end time is past midnight
+    if (endMinutes <= startMinutes) {
+      return timeMinutes >= startMinutes || timeMinutes <= endMinutes;
+    }
+
+    return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
+  }
+
+  String getStatusText([DateTime? dateTime]) {
+    if (isAlwaysOpen) return "Open 24/7";
+    if (isAlwaysClosed) return "Closed";
+
+    if (isOpenNow(dateTime)) {
+      return "Open Now";
+    } else {
+      return "Closed";
+    }
+  }
+
+  String getTodayHoursText([DateTime? dateTime]) {
+    dateTime ??= DateTime.now();
+
+    if (isAlwaysOpen) return "24 hours";
+    if (isAlwaysClosed) return "Closed";
+
+    int weekday = dateTime.weekday;
+    List<TimeRange>? todayHours = weekdayHours[weekday];
+
+    if (todayHours == null || todayHours.isEmpty) {
+      return "Closed today";
+    }
+
+    return todayHours
+        .map((range) =>
+            "${_formatTime(range.start)} - ${_formatTime(range.end)}")
+        .join(", ");
+  }
+
+  String _formatTime(TimeOfDay time) {
+    String hour = time.hour.toString().padLeft(2, '0');
+    String minute = time.minute.toString().padLeft(2, '0');
+    return "$hour:$minute";
+  }
+
+  String getFullScheduleText() {
+    if (isAlwaysOpen) return "Open 24/7";
+    if (isAlwaysClosed) return "Always closed";
+
+    List<String> dayNames = [
+      '',
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun'
+    ];
+    List<String> schedule = [];
+
+    for (int day = 1; day <= 7; day++) {
+      List<TimeRange>? dayHours = weekdayHours[day];
+      if (dayHours != null && dayHours.isNotEmpty) {
+        String hoursText = dayHours
+            .map((range) =>
+                "${_formatTime(range.start)}-${_formatTime(range.end)}")
+            .join(", ");
+        schedule.add("${dayNames[day]}: $hoursText");
+      } else {
+        schedule.add("${dayNames[day]}: Closed");
+      }
+    }
+
+    if (publicHolidayHours.isNotEmpty) {
+      String phHours = publicHolidayHours
+          .map((range) =>
+              "${_formatTime(range.start)}-${_formatTime(range.end)}")
+          .join(", ");
+      schedule.add("Public Holidays: $phHours");
+    }
+
+    return schedule.join("\n");
+  }
+}
+
+class TimeRange {
+  final TimeOfDay start;
+  final TimeOfDay end;
+
+  TimeRange({required this.start, required this.end});
+
+  @override
+  String toString() {
+    return "${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')} - ${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}";
+  }
+}
+
+class TimeOfDay {
+  final int hour;
+  final int minute;
+
+  TimeOfDay({required this.hour, required this.minute});
+
+  @override
+  String toString() {
+    return "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}";
   }
 }
