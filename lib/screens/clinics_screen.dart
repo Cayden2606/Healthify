@@ -20,6 +20,7 @@ class ClinicsScreen extends StatefulWidget {
 }
 
 late Future<List<Clinic>> _clinicsFuture;
+late Future<List<Marker>> _markersFuture;
 
 class _ClinicsScreenState extends State<ClinicsScreen> {
   List<String> _regions = [
@@ -45,10 +46,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     super.initState();
     _getCurrentLocation();
     _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
+    _markersFuture = _generateMarkers(_selectedRegion);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final RenderBox? box =
-          _stackKey.currentContext?.findRenderObject() as RenderBox?;
+      final RenderBox? box = _stackKey.currentContext?.findRenderObject() as RenderBox?;
       if (box != null) {
         setState(() {
           _stackHeight = box.size.height;
@@ -122,6 +123,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           onRegionSelected: (String region) {
             setState(() {
               _selectedRegion = region;
+              _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
+              _markersFuture = _generateMarkers(_selectedRegion);
             });
           },
         );
@@ -129,72 +132,76 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     );
   }
 
-  Future<List<Marker>> get markerList async {
-    List<Clinic> clinicsList = await ApiCalls().fetchClinics(_selectedRegion);
+  Future<List<Marker>> _generateMarkers(String region) async {
+    List<Clinic> clinicsList = await ApiCalls().fetchClinics(region);
 
-    List<Marker> markersList = [
-      // current locaiton marker
-      Marker(
-        point: _currentLocation!,
-        width: 20,
-        height: 20,
-        alignment: Alignment.center,
-        // Keep marker upright regardless of map rotation
-        rotate: false,
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color.fromARGB(237, 14, 204, 39),
-            border: Border.all(
-              color: Colors.white,
-              width: 3,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-        ),
-      ),
-      ...clinicsList.map((clinic) {
-        return Marker(
-          point: LatLng(clinic.lat, clinic.lon),
+    List<Marker> markers = [];
+
+    if (_currentLocation != null) {
+      markers.add(
+        Marker(
+          point: _currentLocation!,
           width: 20,
           height: 20,
           alignment: Alignment.center,
           rotate: false,
-          child: GestureDetector(
-            onTap: () {
-              _selectedClinic = clinic;
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color.fromARGB(237, 233, 4, 4),
-                border: Border.all(color: Colors.white, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color.fromARGB(237, 14, 204, 39),
+              border: Border.all(
+                color: Colors.white,
+                width: 3,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
           ),
-        );
-      }).toList(),
-    ];
+        ),
+      );
+    }
 
-    return markersList;
+    markers.addAll(clinicsList.map((clinic) {
+      return Marker(
+        point: LatLng(clinic.lat, clinic.lon),
+        width: 20,
+        height: 20,
+        alignment: Alignment.center,
+        rotate: false,
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedClinic = clinic;
+            });
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color.fromARGB(237, 233, 4, 4),
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }));
+
+    return markers;
   }
 
   int selectedButtonIndex = 0;
-  final DraggableScrollableController _controller =
-      DraggableScrollableController();
+  final DraggableScrollableController _controller = DraggableScrollableController();
 
   double _liveSheetSize = 0.35;
 
@@ -211,54 +218,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         key: _stackKey,
         children: [
           Positioned.fill(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _currentLocation ??
-                    LatLng(1.3793, 103.8481), // fallback to NYP
-                initialZoom: 16,
-                // Enable rotation
-                interactionOptions: InteractionOptions(
-                  flags: InteractiveFlag.all,
-                ),
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.healthify',
-                ),
-                if (_currentLocation != null)
-                  FutureBuilder<List<Marker>>(
-                    future: markerList,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
-                      }
-                      if (snapshot.hasError || !snapshot.hasData) {
-                        return ErrorWidget(
-                          'Error loading markers: ${snapshot.error}',
-                        );
-                      }
-                      return MarkerLayer(
-                        markers: snapshot.data!,
-                      );
-                    },
-                  ),
-                if (_currentLocation != null)
-                  CircleLayer(
-                    circles: [
-                      CircleMarker(
-                        point: _currentLocation!,
-                        radius: 50, // meters
-                        useRadiusInMeter: true,
-                        color: Colors.blue.withValues(alpha: 0.1),
-                        borderColor: Colors.blue.withValues(alpha: 0.3),
-                        borderStrokeWidth: 1,
-                      ),
-                    ],
-                  ),
-              ],
-            ),
+            child: ClinicMap(
+                mapController: _mapController,
+                currentLocation: _currentLocation,
+                markerList: _markersFuture), // <-- Pass the state variable here  
           ),
           SafeArea(
             child: Padding(
@@ -405,10 +368,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                       FutureBuilder<List<Clinic>>(
                         future: _clinicsFuture,
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Center(
-                                child: CircularProgressIndicator());
+                                child: CircularProgressIndicator()
+                            );
                           } else if (snapshot.hasError) {
                             return Center(
                                 child: Text("Error: ${snapshot.error}"));
@@ -432,8 +395,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               // Attempt to parse opening hours in the format "HH:MM-HH:MM"
                               int openMinutes = 540; // Default 9:00 AM
                               int closeMinutes = 1260; // Default 9:00 PM
-                              print(
-                                  "Opening hours raw: ${clinic.openingHours}");
+                              // print("Opening hours raw: ${clinic.openingHours}");
 
                               if (clinic.openingHours.contains('-')) {
                                 final parts = clinic.openingHours.split('-');
@@ -444,30 +406,23 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   if (openParts.length == 2 &&
                                       closeParts.length == 2) {
                                     final openHour = int.tryParse(openParts[0]);
-                                    final openMinute =
-                                        int.tryParse(openParts[1]);
-                                    final closeHour =
-                                        int.tryParse(closeParts[0]);
-                                    final closeMinute =
-                                        int.tryParse(closeParts[1]);
+                                    final openMinute = int.tryParse(openParts[1]);
+                                    final closeHour = int.tryParse(closeParts[0]);
+                                    final closeMinute = int.tryParse(closeParts[1]);
 
                                     if (openHour != null &&
                                         openMinute != null &&
                                         closeHour != null &&
                                         closeMinute != null) {
                                       openMinutes = openHour * 60 + openMinute;
-                                      closeMinutes =
-                                          closeHour * 60 + closeMinute;
+                                      closeMinutes = closeHour * 60 + closeMinute;
                                     }
                                   }
                                 }
                               }
 
-                              final isOpen =
-                                  currentTimeMinutes >= openMinutes &&
-                                      currentTimeMinutes <= closeMinutes;
-                              final displayHours =
-                                  isOpen ? "Open Now" : "Closed";
+                              final isOpen = currentTimeMinutes >= openMinutes && currentTimeMinutes <= closeMinutes;
+                              final displayHours = isOpen ? "Open Now" : "Closed";
 
                               String displaySpecialty = clinic.speciality;
                               if (displaySpecialty.isEmpty) {
@@ -514,7 +469,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     double dLat = _degreesToRadians(lat2 - lat1);
     double dLon = _degreesToRadians(lon2 - lon1);
     double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(_degreesToRadians(lat1)) *
+            math.cos(_degreesToRadians(lat1)) *
             math.cos(_degreesToRadians(lat2)) *
             math.sin(dLon / 2) *
             math.sin(dLon / 2);
@@ -750,6 +705,72 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ClinicMap extends StatelessWidget {
+  const ClinicMap({
+    super.key,
+    required MapController mapController,
+    required LatLng? currentLocation,
+    required this.markerList,
+  }) : _mapController = mapController, _currentLocation = currentLocation;
+
+  final MapController _mapController;
+  final LatLng? _currentLocation;
+  final Future<List<Marker>> markerList;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlutterMap(
+      mapController: _mapController,
+      options: MapOptions(
+        initialCenter: _currentLocation ?? LatLng(1.3793, 103.8481), // fallback to NYP
+        initialZoom: 16,
+        // Enable rotation
+        interactionOptions: InteractionOptions(
+          flags: InteractiveFlag.all,
+        ),
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.example.healthify',
+        ),
+        if (_currentLocation != null)
+          FutureBuilder<List<Marker>>(
+            future: markerList,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+              if (snapshot.hasError || !snapshot.hasData) {
+                return ErrorWidget(
+                  'Error loading markers: ${snapshot.error}',
+                );
+              }
+              return MarkerLayer(
+                markers: snapshot.data!,
+              );
+            },
+          ),
+        if (_currentLocation != null)
+          CircleLayer(
+            circles: [
+              CircleMarker(
+                point: _currentLocation!,
+                radius: 50, // meters
+                useRadiusInMeter: true,
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderColor: Colors.blue.withValues(alpha: 0.3),
+                borderStrokeWidth: 1,
+              ),
+            ],
+          ),
+      ],
     );
   }
 }
