@@ -47,6 +47,13 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
   // Saved Clinics
   Set<String> _savedClinicPlaceIds = {};
+  // bool saveShow =
+  //     false;
+  // TODO: Replace this with a global index to know which the user is slecting.
+
+  int selectedButtonIndex = 0;
+
+  late Clinic _selectedClinic;
 
   // Current Location GPS
   LatLng? _currentLocation;
@@ -249,12 +256,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     return markers;
   }
 
-  int selectedButtonIndex = 0;
-
-  double _liveSheetSize = 0.35;
-
-  late Clinic _selectedClinic;
-
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
@@ -396,28 +397,30 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Text(
-                              _selectedRegion,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                          selectedButtonIndex == 1
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    _selectedRegion,
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                )
+                              : Container(),
                         ],
                       ),
                       const SizedBox(height: 20),
-                      // Add more widgets here if needed
-                      //
-
                       FutureBuilder<List<Clinic>>(
                         future: _clinicsFuture,
                         builder: (context, snapshot) {
@@ -439,7 +442,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
                           _loadedClinics = allClinics;
 
-                          if (_selectedSearch == "Saved") {
+                          if (selectedButtonIndex == 2) {
+                            // Saved clinics show
                             clinics = clinics
                                 .where((clinic) => _savedClinicPlaceIds
                                     .contains(clinic.placeId))
@@ -453,77 +457,25 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
                           return Column(
                             children: clinics.map((clinic) {
-                              final distance = _currentLocation != null
-                                  ? "${_calculateDistance(_currentLocation!.latitude, _currentLocation!.longitude, clinic.lat, clinic.lon).toStringAsFixed(1)} km"
-                                  : "Unknown";
-
-                              OpeningHours openingHours =
-                                  OpeningHours.parse(clinic.openingHours);
-                              String statusText = openingHours.getStatusText();
-                              String todayHoursText =
-                                  openingHours.getTodayHoursText();
-                              bool isOpen = openingHours.isOpenNow();
-                              String displayHours;
-                              if (isOpen) {
-                                // If open, show "Open Now • actual hours"
-                                displayHours = "$statusText • $todayHoursText";
-                              } else {
-                                // If closed, check if it has hours today or is permanently closed
-                                if (todayHoursText
-                                        .toLowerCase()
-                                        .contains("closed today") ||
-                                    todayHoursText
-                                        .toLowerCase()
-                                        .contains("closed")) {
-                                  displayHours = "Closed today";
-                                } else {
-                                  displayHours =
-                                      "Closed • Opens $todayHoursText";
-                                }
-                              }
-
-                              String displaySpecialty = clinic.speciality;
-
-                              if (clinic.name
-                                  .toLowerCase()
-                                  .contains("polyclinic")) {
-                                displaySpecialty = "Polyclinic";
-                              }
-                              if (displaySpecialty.isEmpty) {
-                                if (clinic.name
-                                    .toLowerCase()
-                                    .contains("family")) {
-                                  displaySpecialty = "Family Medicine";
-                                } else if (clinic.name
-                                    .toLowerCase()
-                                    .contains("surgery")) {
-                                  displaySpecialty = "General Surgery";
-                                } else if (clinic.name
-                                    .toLowerCase()
-                                    .contains("polyclinic")) {
-                                  displaySpecialty = "Polyclinic";
-                                } else if (clinic.name
-                                    .toLowerCase()
-                                    .contains("tcm")) {
-                                  displaySpecialty =
-                                      "Traditional Chinese Medicine";
-                                } else {
-                                  displaySpecialty = "Medical Clinic";
-                                }
-                              }
+                              final displayData = getClinicDisplayInfo(
+                                currentLat: _currentLocation?.latitude,
+                                currentLon: _currentLocation?.longitude,
+                                calculateDistance: _calculateDistance,
+                                clinic: clinic,
+                              );
 
                               return buildClinicCard(
                                 context,
                                 clinic.name,
-                                distance,
-                                displaySpecialty,
-                                displayHours,
+                                displayData['distance'],
+                                displayData['displaySpecialty'],
+                                displayData['displayHours'],
                                 clinic.lat,
                                 clinic.lon,
                                 clinic.placeId,
                                 phone: clinic.phone,
                                 website: clinic.website,
-                                isOpen: isOpen,
+                                isOpen: displayData['isOpen'],
                               );
                             }).toList(),
                           );
@@ -538,6 +490,56 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         ],
       ),
     );
+  }
+
+  Map<String, dynamic> getClinicDisplayInfo({
+    required double? currentLat,
+    required double? currentLon,
+    required double Function(double, double, double, double) calculateDistance,
+    required dynamic clinic,
+  }) {
+    final distance = (currentLat != null && currentLon != null)
+        ? "${calculateDistance(currentLat, currentLon, clinic.lat, clinic.lon).toStringAsFixed(1)} km"
+        : "Unknown";
+
+    final openingHours = OpeningHours.parse(clinic.openingHours);
+    final statusText = openingHours.getStatusText();
+    final todayHoursText = openingHours.getTodayHoursText();
+    final isOpen = openingHours.isOpenNow();
+
+    late String displayHours;
+    final lower = todayHoursText.toLowerCase();
+    if (isOpen) {
+      displayHours = "$statusText • $todayHoursText";
+    } else if (lower.contains("closed today") || lower.contains("closed")) {
+      displayHours = "Closed today";
+    } else {
+      displayHours = "Closed • Opens $todayHoursText";
+    }
+
+    String displaySpecialty = clinic.speciality;
+    final name = clinic.name.toLowerCase();
+    if (name.contains("polyclinic")) {
+      displaySpecialty = "Polyclinic";
+    }
+    if (displaySpecialty.isEmpty) {
+      if (name.contains("family")) {
+        displaySpecialty = "Family Medicine";
+      } else if (name.contains("surgery")) {
+        displaySpecialty = "General Surgery";
+      } else if (name.contains("tcm")) {
+        displaySpecialty = "Traditional Chinese Medicine";
+      } else {
+        displaySpecialty = "Medical Clinic";
+      }
+    }
+
+    return {
+      'distance': distance,
+      'displayHours': displayHours,
+      'displaySpecialty': displaySpecialty,
+      'isOpen': isOpen,
+    };
   }
 
   double _calculateDistance(
@@ -576,6 +578,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     final isSaved = _savedClinicPlaceIds.contains(placeId);
 
     // print(openingHours);
+    print(_savedClinicPlaceIds);
 
     return GestureDetector(
       onTap: () {
@@ -988,6 +991,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           if (index == 1) {
             _showCitiesDialog();
           }
+
+          // Regions selections
           _selectedSearch = _searchBy[index];
         },
         child: Container(
