@@ -3,6 +3,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
 import 'dart:ui';
 
+import 'clinics_screen.dart';
+import 'make_appointments_screen.dart';
+
 class AppointmentsScreen extends StatefulWidget {
   const AppointmentsScreen({super.key});
 
@@ -13,7 +16,6 @@ class AppointmentsScreen extends StatefulWidget {
 class _AppointmentsScreenState extends State<AppointmentsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _showCalendar = false;
 
   final initials =
       '${appUser.name.isNotEmpty ? appUser.name[0] : ''}${appUser.nameLast.isNotEmpty ? appUser.nameLast[0] : ''}';
@@ -186,7 +188,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                   padding: EdgeInsets.fromLTRB(20, 24, 20, 24),
                   child: SafeArea(
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Make appointment functionality
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ClinicsScreen()));
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: theme.colorScheme.onPrimary,

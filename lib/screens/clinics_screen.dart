@@ -467,6 +467,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               return buildClinicCard(
                                 context,
                                 clinic.name,
+                                clinic.address,
                                 displayData['distance'],
                                 displayData['displaySpecialty'],
                                 displayData['displayHours'],
@@ -563,6 +564,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   Widget buildClinicCard(
       BuildContext context,
       String name,
+      String address,
       String distance,
       String specialties,
       String openingHours,
@@ -758,7 +760,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) =>
-                                          MakeAppointmentsScreen()),
+                                          MakeAppointmentsScreen(
+                                              [name, address])),
                                 );
                               },
                               style: FilledButton.styleFrom(
