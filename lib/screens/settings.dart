@@ -268,7 +268,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 3),
+      // bottomNavigationBar: CustomBottomNavigationBar(selectedIndex: 3),
     );
   }
 }

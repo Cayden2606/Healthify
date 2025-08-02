@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
 import 'package:healthify/screens/appointments_screen.dart';
+import 'package:healthify/screens/health_assistant.dart';
 import 'package:healthify/screens/settings.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:pedometer/pedometer.dart';
@@ -135,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 20),
                   // What do you need?
                   Text(
-                    "What do you need?",
+                    "AI Shortcuts",
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: colorScheme.onSurface,
                     ),
@@ -152,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildServiceCard(
                         context: context,
                         icon: Icons.local_hospital,
-                        title: "Doctor",
+                        title: "Symptoms",
                         color: colorScheme.primary,
                       ),
                       _buildServiceCard(
@@ -207,6 +208,31 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
+            if (title == "Health Tips") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => HealthAssistant(
+                        shortCutQuery:
+                            "Give me a variety of practical health tips for maintaining overall physical and mental wellness. Include advice on nutrition, exercise, sleep, stress management, and hydration. Make the tips beginner-friendly and easy to follow in daily life.")),
+              );
+            } else if (title == "Symptoms") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => HealthAssistant(
+                        shortCutQuery:
+                            "I’m experiencing some symptoms but I’m not sure what they mean. Help me understand what common causes might be for things like headaches, fatigue, stomach pain, or dizziness. Keep it general and informative — I’m not looking for a diagnosis, just guidance.")),
+              );
+            } else if (title == "Medicines") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => HealthAssistant(
+                        shortCutQuery:
+                            "What are some commonly used medicines for everyday issues like pain, cold, allergies, or stomach problems? Briefly explain what they do and what to watch out for.")),
+              );
+            }
             // Handle tap
           },
           borderRadius: BorderRadius.circular(16),
@@ -522,6 +548,7 @@ class HomeSearchBar extends StatelessWidget {
           ),
           hintText: "Search clinics, services...",
           hintStyle: theme.textTheme.headlineSmall?.copyWith(
+            fontSize: 18,
             color: colorScheme.onSurface.withValues(alpha: 0.6),
             fontWeight: FontWeight.w400,
           ),

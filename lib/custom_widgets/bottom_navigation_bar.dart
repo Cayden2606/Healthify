@@ -27,10 +27,10 @@ class CustomBottomNavigationBar extends StatelessWidget {
           label: 'AI',
           icon: Icon(Icons.auto_awesome),
         ),
-        NavigationDestination(
-          icon: Icon(Icons.settings),
-          label: 'Settings',
-        ),
+        // NavigationDestination(
+        //   icon: Icon(Icons.settings),
+        //   label: 'Settings',
+        // ),
       ],
       onDestinationSelected: (int index) {
         switch (index) {
@@ -46,9 +46,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
           case 2:
             Navigator.pushReplacementNamed(context, '/assistant');
             break;
-          case 3:
-            Navigator.pushNamed(context, '/settings');
-            break;
+          // case 3:
+          //   Navigator.pushNamed(context, '/settings');
+          //   break;
         }
       },
     );

@@ -10,7 +10,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 class HealthAssistant extends StatefulWidget {
-  const HealthAssistant({super.key});
+  final String? shortCutQuery;
+  const HealthAssistant({this.shortCutQuery, super.key});
 
   @override
   State<HealthAssistant> createState() => _HealthAssistantState();
@@ -29,6 +30,24 @@ class _HealthAssistantState extends State<HealthAssistant> {
       firstName: "Gemini",
       profileImage:
           'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Google_Gemini_icon_2025.svg/1024px-Google_Gemini_icon_2025.svg.png');
+
+  @override
+  void initState() {
+    super.initState();
+
+    // If a shortcut query was provided, send it automatically (hidden from user)
+    if (widget.shortCutQuery != null && widget.shortCutQuery!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _sendMessage(
+            ChatMessage(
+              user: currentUser,
+              createdAt: DateTime.now(),
+              text: widget.shortCutQuery!,
+            ),
+            isShortcut: true); // Pass flag to indicate it's a shortcut
+      });
+    }
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -55,22 +74,27 @@ class _HealthAssistantState extends State<HealthAssistant> {
             child: SizedBox(
               width: 40,
               height: 40,
-              child: CircleAvatar(
-                radius: 20,
-                backgroundColor: theme.colorScheme.onPrimaryFixedVariant,
-                backgroundImage: appUser.profilePic.isNotEmpty
-                    ? NetworkImage(appUser.profilePic)
-                    : null,
-                child: appUser.profilePic.isEmpty
-                    ? Text(
-                        '${appUser.name.isNotEmpty ? appUser.name[0] : ''}${appUser.nameLast.isNotEmpty ? appUser.nameLast[0] : ''}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      )
-                    : null,
+              child: InkWell(
+                onTap: () {
+                  Navigator.pushNamed(context, '/settings');
+                },
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: theme.colorScheme.onPrimaryFixedVariant,
+                  backgroundImage: appUser.profilePic.isNotEmpty
+                      ? NetworkImage(appUser.profilePic)
+                      : null,
+                  child: appUser.profilePic.isEmpty
+                      ? Text(
+                          '${appUser.name.isNotEmpty ? appUser.name[0] : ''}${appUser.nameLast.isNotEmpty ? appUser.nameLast[0] : ''}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        )
+                      : null,
+                ),
               ),
             ),
           ),
@@ -156,7 +180,8 @@ class _HealthAssistantState extends State<HealthAssistant> {
               ),
             ),
             currentUser: currentUser,
-            onSend: _sendMessage,
+            onSend: (message) => _sendMessage(message,
+                isShortcut: false), // Regular user message
             messages: messages,
             messageOptions: MessageOptions(
               showOtherUsersAvatar: true,
@@ -333,7 +358,7 @@ class _HealthAssistantState extends State<HealthAssistant> {
       createdAt: DateTime.now(),
       text: text,
     );
-    _sendMessage(message);
+    _sendMessage(message, isShortcut: false);
   }
 
   void startTypingAnimation() {
@@ -342,13 +367,13 @@ class _HealthAssistantState extends State<HealthAssistant> {
 
     typingTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       dotCount = (dotCount + 1) % 4;
-      final dots = ' .' * dotCount;
+      final dots = '• ' * dotCount;
 
       setState(() {
         messages[0] = ChatMessage(
           user: geminiUser,
           createdAt: messages[0].createdAt,
-          text: 'Analysing$dots',
+          text: ' $dots',
         );
       });
     });
@@ -359,11 +384,15 @@ class _HealthAssistantState extends State<HealthAssistant> {
     typingTimer = null;
   }
 
-  void _sendMessage(ChatMessage chatMessage) async {
+  void _sendMessage(ChatMessage chatMessage, {bool isShortcut = false}) async {
     initGreetings = false;
     setState(() {
-      messages = [chatMessage, ...messages];
+      // Only add user message to chat if it's NOT a shortcut
+      if (!isShortcut) {
+        messages = [chatMessage, ...messages];
+      }
 
+      // Always add the typing indicator
       messages = [
         ChatMessage(
           user: geminiUser,
@@ -458,7 +487,7 @@ Please format your response with proper markdown for better readability.
           ChatMedia(url: file.path, fileName: "", type: MediaType.image)
         ],
       );
-      _sendMessage(chatMessage);
+      _sendMessage(chatMessage, isShortcut: false);
     }
   }
 

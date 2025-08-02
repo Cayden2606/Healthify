@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:healthify/utilities/api_calls.dart';
 import 'package:http/http.dart' as http;
@@ -33,23 +34,21 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     'Southwest',
     'Northeast',
     'Southeast',
+    'Singapore'
   ];
 
   List<String> _searchBy = [
-    'Search by Distance',
     'Search by Region',
+    'Search by Distance',
     'Saved Clinics',
     'Search by Open Status',
   ];
 
   String _selectedRegion = 'Central';
-  String _selectedSearch = 'Search by Distance';
+  String _selectedSearch = 'Search by Region';
 
   // Saved Clinics
   Set<String> _savedClinicPlaceIds = {};
-  // bool saveShow =
-  //     false;
-  // TODO: Replace this with a global index to know which the user is slecting.
 
   int selectedButtonIndex = 0;
 
@@ -77,8 +76,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+
     _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
-    _markersFuture = _generateMarkers(_selectedRegion);
+    _markersFuture =
+        _clinicsFuture.then((clinics) => _generateMarkers(clinics));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final RenderBox? box =
@@ -96,6 +97,43 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     _controller.dispose();
     _fabBottomNotifier.dispose(); // Don't forget to dispose
     super.dispose();
+  }
+
+  // FUnction that takes in selectedButtonIndex, if 0 do the nearby
+  void _searchByOptions(int selectedButtonIndex) {
+    // Nearby 5km radius
+    if (selectedButtonIndex == 1) {
+      setState(() {
+        _clinicsFuture = ApiCalls().fetchClinicsByRadius(
+            lat: _currentLocation!.latitude,
+            lon: _currentLocation!.longitude,
+            radiusInMeters: 5000);
+        _markersFuture =
+            _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+      });
+    }
+    // Regions Default -> Central
+    else if (selectedButtonIndex == 0) {
+      setState(() {
+        _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
+        _markersFuture =
+            _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+      });
+      _showCitiesDialog();
+    }
+    if (selectedButtonIndex == 2) {
+      setState(() {
+        _markersFuture = Future.value(_generateMarkers(_loadedClinics));
+      });
+    }
+    // Open across SG?
+    else if (selectedButtonIndex == 3) {
+      setState(() {
+        _clinicsFuture = ApiCalls().fetchClinics('Singapore');
+        _markersFuture =
+            _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+      });
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -164,7 +202,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
             setState(() {
               _selectedRegion = region;
               _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
-              _markersFuture = _generateMarkers(_selectedRegion);
+              _markersFuture =
+                  _clinicsFuture.then((clinics) => _generateMarkers(clinics));
             });
           },
         );
@@ -172,8 +211,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     );
   }
 
-  Future<List<Marker>> _generateMarkers(String region) async {
-    List<Clinic> clinicsList = await ApiCalls().fetchClinics(region);
+  Future<List<Marker>> _generateMarkers(List<Clinic> clinicsList) async {
+    // List<Clinic> clinicsList = await ApiCalls().fetchClinics(region);
 
     List<Marker> markers = [];
 
@@ -207,7 +246,29 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
       );
     }
 
-    markers.addAll(clinicsList.map((clinic) {
+    // Filter clinics based on selected button
+    List<Clinic> filteredClinics = clinicsList;
+
+    if (selectedButtonIndex == 2) {
+      // Show only saved clinics
+
+      filteredClinics = clinicsList
+          .where((clinic) => _savedClinicPlaceIds.contains(clinic.placeId))
+          .toList();
+    } else if (selectedButtonIndex == 3) {
+      // Show only open clinics
+      filteredClinics = clinicsList.where((clinic) {
+        final displayData = getClinicDisplayInfo(
+          currentLat: _currentLocation?.latitude,
+          currentLon: _currentLocation?.longitude,
+          calculateDistance: _calculateDistance,
+          clinic: clinic,
+        );
+        return displayData['isOpen'] == true;
+      }).toList();
+    }
+
+    markers.addAll(filteredClinics.map((clinic) {
       return Marker(
         point: LatLng(clinic.lat, clinic.lon),
         width: 35,
@@ -286,9 +347,9 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                   SizedBox(height: 16),
                   Row(
                     children: [
-                      _buildNavButton(0, Icons.location_on, 'Nearby'),
+                      _buildNavButton(0, Icons.location_city, 'Regions'),
                       SizedBox(width: 8),
-                      _buildNavButton(1, Icons.location_city, 'Regions'),
+                      _buildNavButton(1, Icons.location_on, 'Nearby'),
                       SizedBox(width: 8),
                       _buildNavButton(2, Icons.bookmark, 'Saved'),
                       SizedBox(width: 8),
@@ -397,7 +458,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          selectedButtonIndex == 1
+                          selectedButtonIndex == 0
                               ? Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 12, vertical: 6),
@@ -448,11 +509,28 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 .where((clinic) => _savedClinicPlaceIds
                                     .contains(clinic.placeId))
                                 .toList();
+                          } else if (selectedButtonIndex == 3) {
+                            // Filter to show only open clinics
+                            clinics = clinics.where((clinic) {
+                              final displayData = getClinicDisplayInfo(
+                                currentLat: _currentLocation?.latitude,
+                                currentLon: _currentLocation?.longitude,
+                                calculateDistance: _calculateDistance,
+                                clinic: clinic,
+                              );
+                              return displayData['isOpen'] == true;
+                            }).toList();
                           }
 
+                          //else if ( it is from Search bar ) { filter results with the name of it? }
+
                           if (clinics.isEmpty) {
-                            return const Center(
-                                child: Text("No saved clinics."));
+                            String emptyMessage = selectedButtonIndex == 2
+                                ? "No saved clinics."
+                                : selectedButtonIndex == 3
+                                    ? "No open clinics found."
+                                    : "No clinics found.";
+                            return Center(child: Text(emptyMessage));
                           }
 
                           return Column(
@@ -481,7 +559,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                             }).toList(),
                           );
                         },
-                      ),
+                      )
                     ],
                   ),
                 );
@@ -991,9 +1069,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           });
 
           // Show dialog when Cities button is tapped
-          if (index == 1) {
-            _showCitiesDialog();
-          }
+          // if (index == 0) {
+          //   _showCitiesDialog();
+          // }
+          _searchByOptions(index);
 
           // Regions selections
           _selectedSearch = _searchBy[index];
@@ -1079,8 +1158,10 @@ class ClinicMap extends StatelessWidget {
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
-                  child: CircularProgressIndicator(),
-                );
+                    child: CircularProgressIndicator(
+                  // Made it transparent since we already have other Circular Progress Indicators
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.transparent),
+                ));
               }
               if (snapshot.hasError || !snapshot.hasData) {
                 return ErrorWidget(
@@ -1424,6 +1505,8 @@ class _CitiesSelectionDialogState extends State<CitiesSelectionDialog>
         return Icons.wb_sunny;
       case 'southeast':
         return Icons.factory;
+      case 'singapore':
+        return FontAwesomeIcons.buildingFlag;
       default:
         return Icons.location_on;
     }
@@ -1441,6 +1524,8 @@ class _CitiesSelectionDialogState extends State<CitiesSelectionDialog>
         return 'Northeastern regions of';
       case 'southeast':
         return 'Southeastern districts of';
+      case 'singapore':
+        return 'All areas of';
       default:
         return 'Areas of';
     }
