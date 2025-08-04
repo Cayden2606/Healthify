@@ -8,6 +8,8 @@ import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../main.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -22,6 +24,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Force Color
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final appState = MyAppState.of(context);
+      appState?.toggleDarkMode(appUser.darkMode, saveToFirebase: false);
+      appState?.changeUserColor(appUser.colorSeed, saveToFirebase: false);
+    });
+
     requestActivityPermission();
     initPlatformState();
   }

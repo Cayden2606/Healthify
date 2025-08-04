@@ -123,7 +123,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                         children: [
                           Icon(Icons.history_outlined, size: 20),
                           SizedBox(width: 8),
-                          Text("Missed"),
+                          Text("Passed"),
                         ],
                       ),
                     ),

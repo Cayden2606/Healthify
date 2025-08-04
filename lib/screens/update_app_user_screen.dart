@@ -362,6 +362,8 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                                 profilePic: removePic
                                     ? ''
                                     : (uploadedUrl ?? appUser.profilePic),
+                                darkMode: appUser.darkMode,
+                                colorSeed: appUser.colorSeed,
                               );
 
                               await FirebaseCalls().updateAppUser(appUser);

@@ -14,12 +14,14 @@ class SettingsPage extends StatefulWidget {
     required this.toggleDarkMode,
     required this.userColor,
     required this.setUserColor,
+    required this.onThemeInitialize,
   });
 
   final bool darkMode;
-  final Function(bool) toggleDarkMode;
+  final void Function(bool, {bool saveToFirebase}) toggleDarkMode;
   final Color userColor;
-  final Function(Color) setUserColor;
+  final void Function(Color, {bool saveToFirebase}) setUserColor;
+  final VoidCallback onThemeInitialize;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -30,6 +32,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
   final initials =
       '${appUser.name.isNotEmpty ? appUser.name[0] : ''}${appUser.nameLast.isNotEmpty ? appUser.nameLast[0] : ''}';
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize theme when settings page loads
+    widget.onThemeInitialize();
+  }
 
   void _languageChange(String? value) {
     setState(() {
@@ -168,8 +177,15 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: [
           IconButton(
             onPressed: () {
+              // Make light mode and Blue
               auth.signOut();
-              Navigator.pushReplacementNamed(context, '/');
+              widget.toggleDarkMode(false, saveToFirebase: false);
+              widget.setUserColor(Colors.blue[100]!, saveToFirebase: false);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              );
             },
             icon: const Icon(Icons.logout),
           ),

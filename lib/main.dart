@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:healthify/screens/home.dart';
 import 'package:healthify/screens/settings.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:healthify/utilities/firebase_calls.dart';
 
 // ms tans files
 import 'package:healthify/screens/login_screen.dart';
@@ -37,18 +38,59 @@ class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<MyApp> createState() => MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  bool _darkMode = ThemeMode.system == ThemeMode.dark;
-  void _toggleDarkMode(bool value) {
-    setState(() => _darkMode = value);
+class MyAppState extends State<MyApp> {
+  bool _darkMode = false;
+  Color _userColor = Colors.blue[100]!;
+  bool _themeInitialized = false;
+
+  static MyAppState? of(BuildContext context) {
+    return context.findAncestorStateOfType<MyAppState>();
   }
 
-  Color _userColor = Colors.blue[100]!;
-  void _changeUserColor(Color value) {
+  @override
+  void initState() {
+    super.initState();
+    initializeTheme();
+  }
+
+  Future<void> initializeTheme() async {
+    // Wait for user authentication and data loading
+    // This should be called after user logs in
+    if (auth.currentUser != null && !_themeInitialized) {
+      try {
+        await FirebaseCalls().getAppUser(auth.currentUser!.uid);
+        setState(() {
+          _darkMode = appUser.darkMode;
+          _userColor = appUser.colorSeed;
+          _themeInitialized = true;
+        });
+      } catch (e) {
+        print('Error initializing theme: $e');
+      }
+    }
+  }
+
+  void toggleDarkMode(bool value, {bool saveToFirebase = true}) {
+    setState(() => _darkMode = value);
+    if (saveToFirebase) _updateThemePreferences();
+  }
+
+  void changeUserColor(Color value, {bool saveToFirebase = true}) {
     setState(() => _userColor = value);
+    if (saveToFirebase) _updateThemePreferences();
+  }
+
+  Future<void> _updateThemePreferences() async {
+    if (auth.currentUser != null) {
+      try {
+        await FirebaseCalls().updateThemePreferences(_darkMode, _userColor);
+      } catch (e) {
+        print('Error updating theme preferences: $e');
+      }
+    }
   }
 
   @override
@@ -67,9 +109,10 @@ class _MyAppState extends State<MyApp> {
         '/assistant': (context) => const HealthAssistant(),
         '/settings': (context) => SettingsPage(
             darkMode: _darkMode,
-            toggleDarkMode: _toggleDarkMode,
+            toggleDarkMode: toggleDarkMode,
             userColor: _userColor,
-            setUserColor: _changeUserColor),
+            setUserColor: changeUserColor,
+            onThemeInitialize: initializeTheme),
       },
       theme: ThemeData(
         useMaterial3: true,

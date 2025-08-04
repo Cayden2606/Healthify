@@ -998,8 +998,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               style: FilledButton.styleFrom(
                                 backgroundColor: colorScheme.surfaceVariant,
                                 foregroundColor: colorScheme.onSurfaceVariant,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 12),
+                                minimumSize: Size(0, 36),
+                                maximumSize: Size(double.infinity, 36),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 0),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(18),
                                 ),
