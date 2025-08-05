@@ -4,6 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:healthify/screens/home.dart' as home_screen;
 
+import '../utilities/status_bar_utils.dart';
+
 class MakeAppointmentsScreen extends StatefulWidget {
   final List<String> clinicDetails;
   const MakeAppointmentsScreen(this.clinicDetails, {super.key});
@@ -85,6 +87,7 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        systemOverlayStyle: StatusBarUtils.getStatusBarStyle(context),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),

@@ -100,6 +100,7 @@ class MyAppState extends State<MyApp> {
     Color _userDarkThemeColor = _userColorHSL.withLightness(0.5).toColor();
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
         '/': (context) => const LoginScreen(),

@@ -11,6 +11,8 @@ import '../utilities/firebase_calls.dart';
 
 import 'package:phone_input/phone_input_package.dart';
 
+import '../utilities/status_bar_utils.dart';
+
 class UpdateAppUserScreen extends StatefulWidget {
   const UpdateAppUserScreen({Key? key}) : super(key: key);
 
@@ -71,6 +73,9 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Change status bar color
+    StatusBarUtils.setStatusBar(context);
+
     ThemeData theme = Theme.of(context);
 
     return Scaffold(

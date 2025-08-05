@@ -9,6 +9,8 @@ import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
+import '../utilities/status_bar_utils.dart';
+
 class HealthAssistant extends StatefulWidget {
   final String? shortCutQuery;
   const HealthAssistant({this.shortCutQuery, super.key});
@@ -68,6 +70,7 @@ class _HealthAssistantState extends State<HealthAssistant> {
         title: Text(
           'Health Assistant',
         ),
+        systemOverlayStyle: StatusBarUtils.getStatusBarStyle(context),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),

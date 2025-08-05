@@ -7,6 +7,8 @@ import 'package:healthify/screens/update_app_user_screen.dart';
 
 import 'package:healthify/utilities/firebase_calls.dart';
 
+import '../utilities/status_bar_utils.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({
     super.key,
@@ -174,6 +176,7 @@ class _SettingsPageState extends State<SettingsPage> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        systemOverlayStyle: StatusBarUtils.getStatusBarStyle(context),
         actions: [
           IconButton(
             onPressed: () {

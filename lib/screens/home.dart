@@ -9,6 +9,7 @@ import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../main.dart';
+import '../utilities/status_bar_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -66,6 +67,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Change status bar color
+    StatusBarUtils.setStatusBar(context);
+
     ThemeData theme = Theme.of(context);
     ColorScheme colorScheme = theme.colorScheme;
     bool isDarkMode = theme.brightness == Brightness.dark;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 
+import '../utilities/status_bar_utils.dart';
 import 'home.dart';
 import 'update_app_user_screen.dart';
 import '../utilities/firebase_calls.dart';
@@ -17,6 +18,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
+    // Change status bar color
+    StatusBarUtils.setStatusBar(context);
+
     return Scaffold(
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.userChanges(),

@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
 import 'dart:ui';
 
+import '../utilities/status_bar_utils.dart';
 import 'clinics_screen.dart';
 import 'make_appointments_screen.dart';
 
@@ -34,6 +35,9 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Change status bar color
+    StatusBarUtils.setStatusBar(context);
+
     ThemeData theme = Theme.of(context);
 
     final size = MediaQuery.of(context).size;

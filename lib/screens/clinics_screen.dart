@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:healthify/utilities/api_calls.dart';
@@ -13,6 +14,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' as math;
 
+import '../utilities/status_bar_utils.dart';
 import 'make_appointments_screen.dart';
 
 class ClinicsScreen extends StatefulWidget {
@@ -216,35 +218,36 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
     List<Marker> markers = [];
 
-    if (_currentLocation != null) {
-      markers.add(
-        Marker(
-          // Current Location Marker
-          point: _currentLocation!,
-          width: 20,
-          height: 20,
-          alignment: Alignment.center,
-          rotate: false,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color.fromARGB(255, 12, 85, 252),
-              border: Border.all(
-                color: Colors.white,
-                width: 3,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+    // if (_currentLocation != null) {
+    //   // Not so live current location
+    //   markers.add(
+    //     Marker(
+    //       // Current Location Marker
+    //       point: _currentLocation!,
+    //       width: 20,
+    //       height: 20,
+    //       alignment: Alignment.center,
+    //       rotate: false,
+    //       child: Container(
+    //         decoration: BoxDecoration(
+    //           shape: BoxShape.circle,
+    //           color: Color.fromARGB(255, 12, 85, 252),
+    //           border: Border.all(
+    //             color: Colors.white,
+    //             width: 3,
+    //           ),
+    //           boxShadow: [
+    //             BoxShadow(
+    //               color: Colors.black.withOpacity(0.3),
+    //               blurRadius: 6,
+    //               offset: Offset(0, 2),
+    //             ),
+    //           ],
+    //         ),
+    //       ),
+    //     ),
+    //   );
+    // }
 
     // Filter clinics based on selected button
     List<Clinic> filteredClinics = clinicsList;
@@ -319,6 +322,13 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
     ThemeData theme = Theme.of(context);
     ColorScheme colorScheme = theme.colorScheme;
     bool isDarkMode = theme.brightness == Brightness.dark;
@@ -1152,6 +1162,9 @@ class ClinicMap extends StatelessWidget {
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          // urlTemplate:
+          //     'https://tiles.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+
           userAgentPackageName: 'com.example.healthify',
         ),
         if (_currentLocation != null)
@@ -1176,6 +1189,7 @@ class ClinicMap extends StatelessWidget {
             },
           ),
         if (_currentLocation != null)
+          // Actual Current Location
           CircleLayer(
             circles: [
               CircleMarker(
@@ -1185,6 +1199,19 @@ class ClinicMap extends StatelessWidget {
                 color: Colors.blue.withValues(alpha: 0.1),
                 borderColor: Colors.blue.withValues(alpha: 0.3),
                 borderStrokeWidth: 1,
+              ),
+            ],
+          ),
+        if (_currentLocation != null)
+          CircleLayer(
+            circles: [
+              CircleMarker(
+                point: _currentLocation!,
+                radius: 7, // pixels
+                useRadiusInMeter: false,
+                color: Color.fromARGB(255, 12, 85, 252),
+                borderColor: Colors.white,
+                borderStrokeWidth: 4,
               ),
             ],
           ),
