@@ -122,7 +122,7 @@ class FirebaseCalls {
     }
   }
 
-  Future<Set<Clinic>> getUserSavedClinics() async {
+  Future<List<Clinic>> getUserSavedClinics() async {
     QuerySnapshot querySnap = await appUsersCollection
         .where('userid', isEqualTo: auth.currentUser?.uid)
         .get();
@@ -134,16 +134,17 @@ class FirebaseCalls {
 
       if (savedClinicsSnapshot.docs.isNotEmpty) {
         return savedClinicsSnapshot.docs
-            .map((doc) => Clinic.fromJson(doc.data() as Map<String, dynamic>)) // Assumes Clinic has a fromJson() factory
-            .toSet();
+            .map((doc) => Clinic.fromJson(doc.data() as Map<String, dynamic>))
+            .toList();
       }
-      return <Clinic>{}; // Return an empty set if no clinics are saved
+      return <Clinic>[];
     } else {
       throw Exception('User not found');
     }
   }
 
   //TODO addAppointment() and getAppointments
+  
 
   // Update only themes
   Future<void> updateThemePreferences(bool darkMode, Color colorSeed) async {

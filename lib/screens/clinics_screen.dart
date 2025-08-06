@@ -78,7 +78,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   @override
   void initState() {
     super.initState();
-    FirebaseCalls().getUserSavedClinics();
+    _loadSavedClinics();
     _getCurrentLocation();
 
     _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
@@ -93,18 +93,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         _fabBottomNotifier.value = (_stackHeight * _controller.size) + 24;
       }
     });
-
-    Future<void> _loadSavedClinics() async {
-      try {
-        final savedClinics = await FirebaseCalls().getUserSavedClinics();
-        setState(() {
-          _savedClinicPlaceIds =
-              savedClinics.map((clinic) => clinic.placeId).toSet();
-        });
-      } catch (e) {
-        print('Error loading saved clinics: $e');
-      }
-    }
   }
 
   @override
@@ -112,6 +100,18 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     _controller.dispose();
     _fabBottomNotifier.dispose(); // Don't forget to dispose
     super.dispose();
+  }
+
+  Future<void> _loadSavedClinics() async {
+    try {
+      final savedClinics = await FirebaseCalls().getUserSavedClinics();
+      setState(() {
+        _savedClinicPlaceIds =
+            savedClinics.map((clinic) => clinic.placeId).toSet();
+      });
+    } catch (e) {
+      print('Error loading saved clinics: $e');
+    }
   }
 
   // FUnction that takes in selectedButtonIndex, if 0 do the nearby
@@ -138,9 +138,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     }
     if (selectedButtonIndex == 2) {
       setState(() {
-        _clinicsFuture = FirebaseCalls()
-            .getUserSavedClinics()
-            .then((clinicsSet) => clinicsSet.toList());
+        _clinicsFuture = FirebaseCalls().getUserSavedClinics();
         _markersFuture =
             _clinicsFuture.then((clinics) => _generateMarkers(clinics));
       });
