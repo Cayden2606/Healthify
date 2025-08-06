@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:healthify/models/clinic.dart';
 
-class ApiCalls {
+class GeoApifyApiCalls {
   Map<String, String> cityId = {
     'Central':
         '512279f76b54f65940595243c6454336f53ff00101f901a0773a0000000000c0020992030743656e7472616c',

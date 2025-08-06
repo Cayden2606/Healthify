@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
+import 'package:healthify/widgets/bottom_navigation_bar.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';

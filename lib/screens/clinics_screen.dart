@@ -1,22 +1,22 @@
-import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:healthify/utilities/api_calls.dart';
-import 'package:healthify/utilities/firebase_calls.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-
-import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
-import 'package:healthify/models/clinic.dart';
-
 import 'package:flutter_map/flutter_map.dart';
+import 'package:healthify/widgets/clinics/cities_selection_dialog.dart';
+import 'package:healthify/widgets/clinics/clinic_map.dart';
+import 'package:healthify/widgets/clinics/search_bar.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' as math;
 
-import '../utilities/status_bar_utils.dart';
-import 'make_appointments_screen.dart';
+import 'package:healthify/screens/make_appointments_screen.dart';
+import 'package:healthify/widgets/bottom_navigation_bar.dart';
+import 'package:healthify/models/clinic.dart';
+import 'package:healthify/models/opening_hours.dart';
+
+import 'package:healthify/utilities/geoapify_calls.dart';
+import 'package:healthify/utilities/firebase_calls.dart';
 
 class ClinicsScreen extends StatefulWidget {
   const ClinicsScreen({Key? key}) : super(key: key);
@@ -31,7 +31,7 @@ late Future<List<Marker>> _markersFuture;
 class _ClinicsScreenState extends State<ClinicsScreen> {
   List<Clinic> _loadedClinics = [];
 
-  List<String> _regions = [
+  final List<String> _regions = [
     'Central',
     'Northwest',
     'Southwest',
@@ -40,7 +40,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     'Singapore'
   ];
 
-  List<String> _searchBy = [
+  final List<String> _searchBy = [
     'Search by Region',
     'Search by Distance',
     'Saved Clinics',
@@ -48,14 +48,12 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   ];
 
   String _selectedRegion = 'Central';
-  String _selectedSearch = 'Search by Region';
+  String _selectedSearch = 'Search by Distance';
 
   // Saved Clinics
   Set<String> _savedClinicPlaceIds = {};
 
-  int selectedButtonIndex = 0;
-
-  late Clinic _selectedClinic;
+  int selectedButtonIndex = 1;
 
   // Current Location GPS
   LatLng? _currentLocation;
@@ -81,7 +79,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     _loadSavedClinics();
     _getCurrentLocation();
 
-    _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
+    _clinicsFuture = _getInitialNearbyClinics();
     _markersFuture = _clinicsFuture.then((clinics) => _generateMarkers(clinics));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -102,6 +100,32 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     super.dispose();
   }
 
+  Future<List<Clinic>> _getInitialNearbyClinics() async {
+    await _getCurrentLocation(); // Wait for location to be available
+
+    if (_currentLocation != null) {
+      final clinics = await GeoApifyApiCalls().fetchClinicsByRadius(
+        lat: _currentLocation!.latitude,
+        lon: _currentLocation!.longitude,
+        radiusInMeters: 5000,
+      );
+
+      final Set<String> processedIds = {};
+      for (final clinic in clinics) {
+        // Run in the background, no need to await
+        if (processedIds.add(clinic.placeId)) {
+          // .add() returns true if the item was added (i.e., it was not already in the set)
+          FirebaseCalls().addClinicIfNotFound(clinic);
+        };
+      }
+      return clinics;
+    } else {
+      // Handle the case where location is not available.
+      // This error will be displayed by the FutureBuilder.
+      throw Exception('Location permissions are required to search nearby.');
+    }
+  }
+
   Future<void> _loadSavedClinics() async {
     try {
       final savedClinics = await FirebaseCalls().getUserSavedClinics();
@@ -119,10 +143,20 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     // Nearby 5km radius
     if (selectedButtonIndex == 1) {
       setState(() {
-        _clinicsFuture = ApiCalls().fetchClinicsByRadius(
-            lat: _currentLocation!.latitude,
-            lon: _currentLocation!.longitude,
-            radiusInMeters: 5000);
+        _clinicsFuture = GeoApifyApiCalls()
+            .fetchClinicsByRadius(
+                lat: _currentLocation!.latitude,
+                lon: _currentLocation!.longitude,
+                radiusInMeters: 5000)
+            .then((clinics) {
+          for (final clinic in clinics) {
+            final Set<String> processedIds = {};
+            if (processedIds.add(clinic.placeId)) {
+              FirebaseCalls().addClinicIfNotFound(clinic);
+            };
+          }
+          return clinics;
+        });
         _markersFuture =
             _clinicsFuture.then((clinics) => _generateMarkers(clinics));
       });
@@ -130,7 +164,15 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     // Regions Default -> Central
     else if (selectedButtonIndex == 0) {
       setState(() {
-        _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
+        _clinicsFuture = GeoApifyApiCalls().fetchClinics(_selectedRegion).then((clinics) {
+          for (final clinic in clinics) {
+            final Set<String> processedIds = {};
+            if (processedIds.add(clinic.placeId)) {
+              FirebaseCalls().addClinicIfNotFound(clinic);
+            };
+          }
+          return clinics;
+        });
         _markersFuture =
             _clinicsFuture.then((clinics) => _generateMarkers(clinics));
       });
@@ -144,9 +186,17 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
       });
     }
     // Open across SG?
-    else if (selectedButtonIndex == 3) {
+   else if (selectedButtonIndex == 3) {
       setState(() {
-        _clinicsFuture = ApiCalls().fetchClinics('Singapore');
+        _clinicsFuture = GeoApifyApiCalls().fetchClinics('Singapore').then((clinics) {
+          for (final clinic in clinics) {
+            final Set<String> processedIds = {};
+            if (processedIds.add(clinic.placeId)) {
+              FirebaseCalls().addClinicIfNotFound(clinic);
+            };
+          }
+          return clinics;
+        });
         _markersFuture =
             _clinicsFuture.then((clinics) => _generateMarkers(clinics));
       });
@@ -218,7 +268,16 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           onRegionSelected: (String region) {
             setState(() {
               _selectedRegion = region;
-              _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
+              _clinicsFuture =
+                  GeoApifyApiCalls().fetchClinics(_selectedRegion).then((clinics) {
+                for (final clinic in clinics) {
+                  final Set<String> processedIds = {};
+                  if (processedIds.add(clinic.placeId)) {
+                    FirebaseCalls().addClinicIfNotFound(clinic);
+                  };
+                }
+                return clinics;
+              });
               _markersFuture =
                   _clinicsFuture.then((clinics) => _generateMarkers(clinics));
             });
@@ -229,40 +288,9 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   }
 
   Future<List<Marker>> _generateMarkers(List<Clinic> clinicsList) async {
-    // List<Clinic> clinicsList = await ApiCalls().fetchClinics(region);
+    // List<Clinic> clinicsList = await GeoApifyApiCalls().fetchClinics(region);
 
     List<Marker> markers = [];
-
-    // if (_currentLocation != null) {
-    //   // Not so live current location
-    //   markers.add(
-    //     Marker(
-    //       // Current Location Marker
-    //       point: _currentLocation!,
-    //       width: 20,
-    //       height: 20,
-    //       alignment: Alignment.center,
-    //       rotate: false,
-    //       child: Container(
-    //         decoration: BoxDecoration(
-    //           shape: BoxShape.circle,
-    //           color: Color.fromARGB(255, 12, 85, 252),
-    //           border: Border.all(
-    //             color: Colors.white,
-    //             width: 3,
-    //           ),
-    //           boxShadow: [
-    //             BoxShadow(
-    //               color: Colors.black.withOpacity(0.3),
-    //               blurRadius: 6,
-    //               offset: Offset(0, 2),
-    //             ),
-    //           ],
-    //         ),
-    //       ),
-    //     ),
-    //   );
-    // }
 
     // Filter clinics based on selected button
     List<Clinic> filteredClinics = clinicsList;
@@ -294,10 +322,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         alignment: Alignment.topCenter,
         rotate: true,
         child: GestureDetector(
-          onTap: () {
+          onTap: () {            
             setState(() {
-              _selectedClinic = clinic;
-
               final clickedIndex = _loadedClinics.indexWhere(
                   (c) => c.lat == clinic.lat && c.lon == clinic.lon);
               if (clickedIndex != -1) {
@@ -305,6 +331,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                 _loadedClinics.insert(0, clickedClinic);
               }
             });
+
             _mapController.move(LatLng(clinic.lat, clinic.lon), 17.0);
 
             _controller.animateTo(
@@ -335,12 +362,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     return markers;
   }
 
-  void _saveClinicsFirebase() async {
+void _saveClinicsFirebase() async {
     // Save the _savedClinicPlaceIds to Firebase
     try {
-      await FirebaseCalls().saveUserSavedClinics(
-        _loadedClinics.where((clinic) => _savedClinicPlaceIds.contains(clinic.placeId)).toSet(),
-      );
+      await FirebaseCalls().saveUserSavedClinics(_savedClinicPlaceIds,);
     } catch (e) {
       print('Error saving clinics to Firebase: $e');
     }
@@ -376,7 +401,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SearchBar(
+                  ClinicSearchBar(
                       isDarkMode: isDarkMode,
                       colorScheme: colorScheme,
                       theme: theme),
@@ -570,19 +595,9 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                           }
 
                           return Column(
-                            children: clinics.map((clinic) {
-                              final displayData = getClinicDisplayInfo(
-                                currentLat: _currentLocation?.latitude,
-                                currentLon: _currentLocation?.longitude,
-                                calculateDistance: _calculateDistance,
-                                clinic: clinic,
-                              );
-
-                              return buildClinicCard(
-                                context,
-                                clinic
-                              );
-                            }).toList(),
+                            children: clinics.map(
+                              (clinic) => buildClinicCard(context, clinic)
+                            ).toList(),
                           );
                         },
                       )
@@ -1007,6 +1022,13 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   } else {
                                     _savedClinicPlaceIds.add(clinic.placeId);
                                   }
+
+                                  // If on the "Saved" tab, refresh the markers
+                                  if (selectedButtonIndex == 2) {
+                                    // Re-fetch the saved clinics and regenerate markers
+                                    _clinicsFuture = FirebaseCalls().getUserSavedClinics();
+                                    _markersFuture = _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+                                  }
                                 });
                                 _saveClinicsFirebase(); // Save to Firebase
                               },
@@ -1072,10 +1094,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
             selectedButtonIndex = index;
           });
 
-          // Show dialog when Cities button is tapped
-          // if (index == 0) {
-          //   _showCitiesDialog();
-          // }
           _searchByOptions(index);
 
           // Regions selections
@@ -1122,800 +1140,5 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         ),
       ),
     );
-  }
-}
-
-class ClinicMap extends StatelessWidget {
-  const ClinicMap({
-    super.key,
-    required MapController mapController,
-    required LatLng? currentLocation,
-    required this.markerList,
-  })  : _mapController = mapController,
-        _currentLocation = currentLocation;
-
-  final MapController _mapController;
-  final LatLng? _currentLocation;
-  final Future<List<Marker>> markerList;
-
-  @override
-  Widget build(BuildContext context) {
-    return FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter:
-            _currentLocation ?? LatLng(1.3793, 103.8481), // fallback to NYP
-        initialZoom: 16,
-        // Enable rotation
-        interactionOptions: InteractionOptions(
-          flags: InteractiveFlag.all,
-        ),
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          // urlTemplate:
-          //     'https://tiles.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-
-          userAgentPackageName: 'com.example.healthify',
-        ),
-        if (_currentLocation != null)
-          FutureBuilder<List<Marker>>(
-            future: markerList,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                    child: CircularProgressIndicator(
-                  // Made it transparent since we already have other Circular Progress Indicators
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.transparent),
-                ));
-              }
-              if (snapshot.hasError || !snapshot.hasData) {
-                return ErrorWidget(
-                  'Error loading markers: ${snapshot.error}',
-                );
-              }
-              return MarkerLayer(
-                markers: snapshot.data!,
-              );
-            },
-          ),
-        if (_currentLocation != null)
-          // Actual Current Location
-          CircleLayer(
-            circles: [
-              CircleMarker(
-                point: _currentLocation!,
-                radius: 50, // meters
-                useRadiusInMeter: true,
-                color: Colors.blue.withValues(alpha: 0.1),
-                borderColor: Colors.blue.withValues(alpha: 0.3),
-                borderStrokeWidth: 1,
-              ),
-            ],
-          ),
-        if (_currentLocation != null)
-          CircleLayer(
-            circles: [
-              CircleMarker(
-                point: _currentLocation!,
-                radius: 7, // pixels
-                useRadiusInMeter: false,
-                color: Color.fromARGB(255, 12, 85, 252),
-                borderColor: Colors.white,
-                borderStrokeWidth: 4,
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-}
-
-class CitiesSelectionDialog extends StatefulWidget {
-  final List<String> regions;
-  final String selectedRegion;
-  final Function(String) onRegionSelected;
-
-  const CitiesSelectionDialog({
-    Key? key,
-    required this.regions,
-    required this.selectedRegion,
-    required this.onRegionSelected,
-  }) : super(key: key);
-
-  @override
-  State<CitiesSelectionDialog> createState() => _CitiesSelectionDialogState();
-}
-
-class _CitiesSelectionDialogState extends State<CitiesSelectionDialog>
-    with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-  String _tempSelectedRegion = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _tempSelectedRegion = widget.selectedRegion;
-
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: Dialog(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth: 320,
-                  maxHeight: 490,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.shadow.withValues(alpha: 0.15),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primaryContainer,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.location_city,
-                              size: 28,
-                              color: colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Select Region',
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Choose your preferred region to find nearby clinics',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Region List
-                    Flexible(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        itemCount: widget.regions.length,
-                        itemBuilder: (context, index) {
-                          final region = widget.regions[index];
-                          final isSelected = region == _tempSelectedRegion;
-
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: () {
-                                  setState(() {
-                                    _tempSelectedRegion = region;
-                                  });
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? colorScheme.primaryContainer
-                                        : colorScheme.surfaceContainerHighest
-                                            .withValues(alpha: 0.3),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? colorScheme.primary
-                                          : Colors.transparent,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? colorScheme.primary
-                                              : colorScheme
-                                                  .surfaceContainerHighest,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          _getRegionIcon(region),
-                                          size: 20,
-                                          color: isSelected
-                                              ? colorScheme.onPrimary
-                                              : colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              region,
-                                              style: theme.textTheme.titleMedium
-                                                  ?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                color: isSelected
-                                                    ? colorScheme
-                                                        .onPrimaryContainer
-                                                    : colorScheme.onSurface,
-                                              ),
-                                            ),
-                                            Text(
-                                              '${_getRegionDescription(region)} Singapore',
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                color: isSelected
-                                                    ? colorScheme
-                                                        .onPrimaryContainer
-                                                        .withValues(alpha: 0.8)
-                                                    : colorScheme
-                                                        .onSurfaceVariant,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (isSelected)
-                                        Icon(
-                                          Icons.check_circle,
-                                          color: colorScheme.primary,
-                                          size: 24,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    // Action Buttons
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                side: BorderSide(
-                                  color: colorScheme.outline,
-                                ),
-                              ),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  color: colorScheme.onSurface,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () {
-                                widget.onRegionSelected(_tempSelectedRegion);
-                                Navigator.of(context).pop();
-                              },
-                              style: FilledButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                backgroundColor: colorScheme.primary,
-                              ),
-                              child: Text(
-                                'Apply',
-                                style: TextStyle(
-                                  color: colorScheme.onPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  IconData _getRegionIcon(String region) {
-    switch (region.toLowerCase()) {
-      case 'central':
-        return Icons.business;
-      case 'northwest':
-        return Icons.landscape;
-      case 'southwest':
-        return Icons.water;
-      case 'northeast':
-        return Icons.wb_sunny;
-      case 'southeast':
-        return Icons.factory;
-      case 'singapore':
-        return FontAwesomeIcons.buildingFlag;
-      default:
-        return Icons.location_on;
-    }
-  }
-
-  String _getRegionDescription(String region) {
-    switch (region.toLowerCase()) {
-      case 'central':
-        return 'Central & CBD areas of';
-      case 'northwest':
-        return 'Northwestern districts of';
-      case 'southwest':
-        return 'Southwestern areas of';
-      case 'northeast':
-        return 'Northeastern regions of';
-      case 'southeast':
-        return 'Southeastern districts of';
-      case 'singapore':
-        return 'All areas of';
-      default:
-        return 'Areas of';
-    }
-  }
-}
-
-class SearchBar extends StatelessWidget {
-  const SearchBar({
-    super.key,
-    required this.isDarkMode,
-    required this.colorScheme,
-    required this.theme,
-  });
-
-  final bool isDarkMode;
-  final ColorScheme colorScheme;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDarkMode
-            ? colorScheme.surface.withValues(alpha: 0.9)
-            : colorScheme.surface,
-        borderRadius: BorderRadius.circular(50),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: SizedBox(
-        height: 50,
-        child: TextField(
-          decoration: InputDecoration(
-            prefixIcon: Padding(
-              padding: const EdgeInsets.only(left: 15),
-              child: Icon(
-                Icons.search,
-                color: colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            hintText: "Search clinics, services...",
-            hintStyle: theme.textTheme.headlineMedium?.copyWith(
-              color: colorScheme.onSurface.withValues(alpha: 0.6),
-              fontWeight: FontWeight.w400,
-            ),
-            border: InputBorder.none,
-            contentPadding:
-                const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          ),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurface,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class OpeningHours {
-  final Map<int, List<TimeRange>> weekdayHours;
-  final List<TimeRange> publicHolidayHours;
-  final bool isAlwaysOpen;
-  final bool isAlwaysClosed;
-
-  OpeningHours({
-    required this.weekdayHours,
-    required this.publicHolidayHours,
-    this.isAlwaysOpen = false,
-    this.isAlwaysClosed = false,
-  });
-
-  static OpeningHours parse(String openingHoursString) {
-    if (openingHoursString.isEmpty) {
-      return OpeningHours(
-        weekdayHours: {},
-        publicHolidayHours: [],
-        isAlwaysClosed: true,
-      );
-    }
-
-    // Handle 24/7 or always open cases
-    if (openingHoursString.toLowerCase().contains('24/7') ||
-        openingHoursString.toLowerCase().contains('always open')) {
-      return OpeningHours(
-        weekdayHours: {},
-        publicHolidayHours: [],
-        isAlwaysOpen: true,
-      );
-    }
-
-    Map<int, List<TimeRange>> weekdayHours = {};
-    List<TimeRange> publicHolidayHours = [];
-
-    // Split by semicolon to handle multiple rules
-    List<String> rules = openingHoursString.split(';');
-
-    for (String rule in rules) {
-      rule = rule.trim();
-      if (rule.isEmpty) continue;
-
-      try {
-        _parseRule(rule, weekdayHours, publicHolidayHours);
-      } catch (e) {
-        print('Error parsing opening hours rule: $rule - $e');
-      }
-    }
-
-    return OpeningHours(
-      weekdayHours: weekdayHours,
-      publicHolidayHours: publicHolidayHours,
-    );
-  }
-
-  static void _parseRule(String rule, Map<int, List<TimeRange>> weekdayHours,
-      List<TimeRange> publicHolidayHours) {
-    // Handle "off" or "closed" cases
-    if (rule.toLowerCase().contains('off') ||
-        rule.toLowerCase().contains('closed')) {
-      return;
-    }
-
-    // Split days and time parts
-    List<String> parts = rule.split(RegExp(r'\s+'));
-    if (parts.length < 2) return;
-
-    String daysPart = parts[0];
-    String timePart = parts.sublist(1).join(' ');
-
-    // Parse time ranges
-    List<TimeRange> timeRanges = _parseTimeRanges(timePart);
-    if (timeRanges.isEmpty) return;
-
-    // Handle Public Holidays
-    if (daysPart.contains('PH')) {
-      publicHolidayHours.addAll(timeRanges);
-      daysPart = daysPart.replaceAll('PH', '').replaceAll(',', '');
-    }
-
-    // Parse days
-    List<int> days = _parseDays(daysPart);
-    for (int day in days) {
-      weekdayHours[day] = (weekdayHours[day] ?? [])..addAll(timeRanges);
-    }
-  }
-
-  static List<TimeRange> _parseTimeRanges(String timePart) {
-    List<TimeRange> ranges = [];
-
-    // Handle multiple time ranges separated by comma
-    List<String> timeSlots = timePart.split(',');
-
-    for (String slot in timeSlots) {
-      slot = slot.trim();
-      if (slot.contains('-')) {
-        List<String> times = slot.split('-');
-        if (times.length == 2) {
-          TimeOfDay? start = _parseTime(times[0].trim());
-          TimeOfDay? end = _parseTime(times[1].trim());
-          if (start != null && end != null) {
-            ranges.add(TimeRange(start: start, end: end));
-          }
-        }
-      }
-    }
-
-    return ranges;
-  }
-
-  static List<int> _parseDays(String daysPart) {
-    List<int> days = [];
-
-    // Day abbreviations mapping (Monday = 1, Sunday = 7)
-    Map<String, int> dayMap = {
-      'mo': 1,
-      'tu': 2,
-      'we': 3,
-      'th': 4,
-      'fr': 5,
-      'sa': 6,
-      'su': 7
-    };
-
-    daysPart = daysPart.toLowerCase().replaceAll(',', ' ');
-    List<String> dayParts = daysPart.split(RegExp(r'\s+'));
-
-    for (String part in dayParts) {
-      part = part.trim();
-      if (part.isEmpty) continue;
-
-      if (part.contains('-')) {
-        // Handle day ranges like "mo-fr"
-        List<String> range = part.split('-');
-        if (range.length == 2) {
-          int? start = dayMap[range[0].trim()];
-          int? end = dayMap[range[1].trim()];
-          if (start != null && end != null) {
-            for (int i = start; i <= end; i++) {
-              days.add(i);
-            }
-          }
-        }
-      } else {
-        // Handle individual days
-        int? day = dayMap[part];
-        if (day != null) {
-          days.add(day);
-        }
-      }
-    }
-
-    return days;
-  }
-
-  static TimeOfDay? _parseTime(String timeStr) {
-    timeStr = timeStr.trim();
-    RegExp timeRegex = RegExp(r'^(\d{1,2}):(\d{2})$');
-    Match? match = timeRegex.firstMatch(timeStr);
-
-    if (match != null) {
-      int hour = int.parse(match.group(1)!);
-      int minute = int.parse(match.group(2)!);
-
-      if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
-        return TimeOfDay(hour: hour, minute: minute);
-      }
-    }
-
-    return null;
-  }
-
-  bool isOpenNow([DateTime? dateTime]) {
-    dateTime ??= DateTime.now();
-
-    if (isAlwaysOpen) return true;
-    if (isAlwaysClosed) return false;
-
-    int weekday = dateTime.weekday;
-    TimeOfDay currentTime =
-        TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
-
-    // Check if today has opening hours
-    List<TimeRange>? todayHours = weekdayHours[weekday];
-    if (todayHours == null || todayHours.isEmpty) return false;
-
-    // Check if current time falls within any opening hours
-    for (TimeRange range in todayHours) {
-      if (_isTimeInRange(currentTime, range)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  bool _isTimeInRange(TimeOfDay time, TimeRange range) {
-    int timeMinutes = time.hour * 60 + time.minute;
-    int startMinutes = range.start.hour * 60 + range.start.minute;
-    int endMinutes = range.end.hour * 60 + range.end.minute;
-
-    // Handle cases where end time is past midnight
-    if (endMinutes <= startMinutes) {
-      return timeMinutes >= startMinutes || timeMinutes <= endMinutes;
-    }
-
-    return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
-  }
-
-  String getStatusText([DateTime? dateTime]) {
-    if (isAlwaysOpen) return "Open 24/7";
-    if (isAlwaysClosed) return "Closed";
-
-    if (isOpenNow(dateTime)) {
-      return "Open Now";
-    } else {
-      return "Closed";
-    }
-  }
-
-  String getTodayHoursText([DateTime? dateTime]) {
-    dateTime ??= DateTime.now();
-
-    if (isAlwaysOpen) return "24 hours";
-    if (isAlwaysClosed) return "Closed";
-
-    int weekday = dateTime.weekday;
-    List<TimeRange>? todayHours = weekdayHours[weekday];
-
-    if (todayHours == null || todayHours.isEmpty) {
-      return "Closed today";
-    }
-
-    return todayHours
-        .map((range) =>
-            "${_formatTime(range.start)} - ${_formatTime(range.end)}")
-        .join(", ");
-  }
-
-  String _formatTime(TimeOfDay time) {
-    String hour = time.hour.toString().padLeft(2, '0');
-    String minute = time.minute.toString().padLeft(2, '0');
-    return "$hour:$minute";
-  }
-
-  String getFullScheduleText() {
-    if (isAlwaysOpen) return "Open 24/7";
-    if (isAlwaysClosed) return "Always closed";
-
-    List<String> dayNames = [
-      '',
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thu',
-      'Fri',
-      'Sat',
-      'Sun'
-    ];
-    List<String> schedule = [];
-
-    for (int day = 1; day <= 7; day++) {
-      List<TimeRange>? dayHours = weekdayHours[day];
-      if (dayHours != null && dayHours.isNotEmpty) {
-        String hoursText = dayHours
-            .map((range) =>
-                "${_formatTime(range.start)}-${_formatTime(range.end)}")
-            .join(", ");
-        schedule.add("${dayNames[day]}: $hoursText");
-      } else {
-        schedule.add("${dayNames[day]}: Closed");
-      }
-    }
-
-    if (publicHolidayHours.isNotEmpty) {
-      String phHours = publicHolidayHours
-          .map((range) =>
-              "${_formatTime(range.start)}-${_formatTime(range.end)}")
-          .join(", ");
-      schedule.add("Public Holidays: $phHours");
-    }
-
-    return schedule.join("\n");
-  }
-}
-
-class TimeRange {
-  final TimeOfDay start;
-  final TimeOfDay end;
-
-  TimeRange({required this.start, required this.end});
-
-  @override
-  String toString() {
-    return "${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')} - ${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}";
-  }
-}
-
-class TimeOfDay {
-  final int hour;
-  final int minute;
-
-  TimeOfDay({required this.hour, required this.minute});
-
-  @override
-  String toString() {
-    return "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}";
   }
 }

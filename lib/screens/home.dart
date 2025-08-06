@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
-import 'package:healthify/screens/appointments_screen.dart';
+import 'package:healthify/widgets/bottom_navigation_bar.dart';
 import 'package:healthify/screens/health_assistant.dart';
-import 'package:healthify/screens/settings.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
+import 'package:healthify/widgets/home/home_app_bar.dart';
+import 'package:healthify/widgets/home/home_search_bar.dart';
+import 'package:healthify/widgets/home/steps_card.dart';
+import 'package:healthify/widgets/home/upcoming_schedule_card.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -113,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header with avatar and greeting
-                  AppBar(theme: theme),
+                  HomeAppBar(theme: theme),
                   const SizedBox(height: 20),
                   Text(
                     "Hello",
@@ -135,8 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       theme: theme),
                   const SizedBox(height: 20),
                   // Steps Widget
-                  StepsCard(
-                      colorScheme: colorScheme, theme: theme, steps: _steps),
+                  StepsCard(colorScheme: colorScheme, theme: theme, steps: _steps),
                   const SizedBox(height: 20),
                   // Upcoming Schedule
                   Text(
@@ -281,297 +282,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class AppBar extends StatelessWidget {
-  const AppBar({
-    super.key,
-    required this.theme,
-  });
-
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        CircleAvatar(
-          radius: 25,
-          backgroundColor: theme.colorScheme.onPrimaryFixedVariant,
-          backgroundImage: appUser.profilePic.isNotEmpty
-              ? NetworkImage(appUser.profilePic)
-              : null,
-          child: appUser.profilePic.isEmpty
-              ? Text(
-                  '${appUser.name.isNotEmpty ? appUser.name[0] : ''}${appUser.nameLast.isNotEmpty ? appUser.nameLast[0] : ''}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                )
-              : null,
-        ),
-        IconButton(
-          icon: Icon(Icons.settings_rounded), // or any icon you want
-          onPressed: () {
-            Navigator.pushNamed(context, '/settings');
-          },
-        )
-      ],
-    );
-  }
-}
-
-class UpcomingScheduleCard extends StatelessWidget {
-  const UpcomingScheduleCard({
-    super.key,
-    required this.colorScheme,
-    required this.theme,
-  });
-
-  final ColorScheme colorScheme;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent, // So the gradient shows through
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AppointmentsScreen(),
-            ),
-          );
-        },
-        child: Container(
-          height: 130,
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colorScheme.secondaryContainer,
-                colorScheme.secondaryContainer.withAlpha(180),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: colorScheme.outline.withAlpha(50),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withAlpha(80),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.calendar_today_outlined,
-                size: 32,
-                color: colorScheme.onSecondaryContainer,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "No appointments today",
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: colorScheme.onSecondaryContainer,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "Tap to schedule",
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSecondaryContainer.withAlpha(200),
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class StepsCard extends StatelessWidget {
-  const StepsCard({
-    super.key,
-    required this.colorScheme,
-    required this.theme,
-    required int steps,
-  }) : _steps = steps;
-
-  final ColorScheme colorScheme;
-  final ThemeData theme;
-  final int _steps;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primary,
-            colorScheme.primary.withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colorScheme.onPrimary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.directions_walk,
-              size: 28,
-              color: colorScheme.onPrimary,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "TODAY'S STEPS", // It only track from phone's last boot
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onPrimary.withValues(alpha: 0.9),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _steps > 0 ? _steps.toString() : 'Loading...',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(20), // makes it pill-shaped
-                  child: LinearProgressIndicator(
-                    value: (_steps.clamp(0, 10000)) / 10000,
-                    minHeight: 10, // optional: makes the pill taller
-                    backgroundColor:
-                        colorScheme.onPrimary.withValues(alpha: 0.1),
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: colorScheme.onPrimary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Text(
-              "Goal: 10K",
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onPrimary,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class HomeSearchBar extends StatelessWidget {
-  const HomeSearchBar({
-    super.key,
-    required this.isDarkMode,
-    required this.colorScheme,
-    required this.theme,
-  });
-
-  final bool isDarkMode;
-  final ColorScheme colorScheme;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDarkMode
-            ? colorScheme.surface.withValues(alpha: 0.7)
-            : colorScheme.surface,
-        borderRadius: BorderRadius.circular(50),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.3),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextField(
-        decoration: InputDecoration(
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 15),
-            child: Icon(
-              Icons.search,
-              color: colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-          ),
-          hintText: "Search clinics, services...",
-          hintStyle: theme.textTheme.headlineSmall?.copyWith(
-            fontSize: 18,
-            color: colorScheme.onSurface.withValues(alpha: 0.6),
-            fontWeight: FontWeight.w400,
-          ),
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
-        ),
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: colorScheme.onSurface,
         ),
       ),
     );

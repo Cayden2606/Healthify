@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:healthify/custom_widgets/bottom_navigation_bar.dart';
+import 'package:healthify/widgets/bottom_navigation_bar.dart';
 import 'package:healthify/models/settings_item.dart';
 import 'package:healthify/models/theme_colors.dart';
 import 'package:healthify/screens/update_app_user_screen.dart';
