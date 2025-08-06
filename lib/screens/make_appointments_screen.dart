@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:healthify/screens/home.dart' as home_screen;
+import 'package:healthify/models/clinic.dart';
 
-import '../utilities/status_bar_utils.dart';
+import 'package:healthify/screens/home.dart' as home_screen;
+import 'package:healthify/utilities/firebase_calls.dart';
+import 'package:healthify/utilities/status_bar_utils.dart';
 
 class MakeAppointmentsScreen extends StatefulWidget {
-  final List<String> clinicDetails;
-  const MakeAppointmentsScreen(this.clinicDetails, {super.key});
+  final Clinic clinic;
+  const MakeAppointmentsScreen(this.clinic, {super.key});
 
   @override
   State<MakeAppointmentsScreen> createState() => _MakeAppointmentsScreenState();
@@ -19,6 +21,7 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
   String? selectedService;
   DateTime? selectedDate;
   String? selectedTimeSlot;
+  final _additionalInfoController = TextEditingController();
 
   final Map<String, List<String>> services = {
     'Doctor Consultation': [
@@ -144,7 +147,7 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
           ),
 
           // Bottom Action Button
-          if (selectedTimeSlot != null) _buildBottomActionButton(theme),
+          if (selectedTimeSlot != null) _buildBottomActionButton(theme, widget.clinic),
         ],
       ),
     );
@@ -185,7 +188,7 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.clinicDetails[0],
+                  widget.clinic.name,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -196,10 +199,10 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
                 SizedBox(
                   width: 200,
                   child: Text(
-                    widget.clinicDetails[1].endsWith(', Singapore')
-                        ? widget.clinicDetails[1]
+                    widget.clinic.address.endsWith(', Singapore')
+                        ? widget.clinic.address
                             .replaceFirst(', Singapore', '')
-                        : widget.clinicDetails[1],
+                        : widget.clinic.address,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -509,6 +512,7 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
+                controller: _additionalInfoController,
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintStyle: TextStyle(fontSize: 16),
@@ -557,7 +561,7 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
     );
   }
 
-  Widget _buildBottomActionButton(ThemeData theme) {
+  Widget _buildBottomActionButton(ThemeData theme, Clinic clinic) {
     return Positioned(
       bottom: 0,
       left: 0,
@@ -627,13 +631,26 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
                     onPressed: () {
                       // Handle appointment booking
                       _showBookingConfirmation(theme);
+                      FirebaseCalls().addAppointment(
+                        clinic: clinic,
+                        appointmentDateTime: DateTime(
+                          selectedDate!.year,
+                          selectedDate!.month,
+                          selectedDate!.day,
+                          int.parse(selectedTimeSlot!.split(':')[0]),
+                          int.parse(
+                              selectedTimeSlot!.split(':')[1].split(' ')[0]),
+                        ),
+                        serviceType: selectedService!,
+                        additionalInfo: _additionalInfoController.text,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: theme.colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       elevation: 4,
-                      shadowColor: theme.colorScheme.primary.withOpacity(0.25),
+                      shadowColor: theme.colorScheme.primary.withValues(alpha: 0.25),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),

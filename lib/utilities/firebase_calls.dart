@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:healthify/models/clinic.dart';
+import 'package:healthify/models/appointment.dart';
 
 import 'package:healthify/models/app_user.dart';
 
@@ -143,8 +144,57 @@ class FirebaseCalls {
     }
   }
 
-  //TODO addAppointment() and getAppointments
-  
+  Future<void> addAppointment({
+    required Clinic clinic,
+    required DateTime appointmentDateTime,
+    required String serviceType,
+    String additionalInfo = '',
+  }) async {
+    final user = auth.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    await appointmentsCollection.add({
+      'userId': user.uid,
+      'clinic': clinic.toJson(), // Store the entire clinic object
+      'appointmentDateTime': Timestamp.fromDate(appointmentDateTime),
+      'serviceType': serviceType,
+      'status': 'upcoming', // Default status for a new appointment
+      'additionalInfo': additionalInfo, // Optional field for additional info
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    print('Appointment added successfully');
+  }
+
+  Future<List<Appointment>> getAppointments() async {
+    final user = auth.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    QuerySnapshot querySnap = await appointmentsCollection
+        .where('userId', isEqualTo: user.uid)
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    return querySnap.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final clinic = Clinic.fromJson(data['clinic']);
+      final appointmentDateTime =
+          (data['appointmentDateTime'] as Timestamp).toDate();
+      final createdAt = (data['createdAt'] as Timestamp).toDate();
+      return Appointment(
+        id: doc.id,
+        userId: data['userId'],
+        clinic: clinic,
+        appointmentDateTime: appointmentDateTime,
+        serviceType: data['serviceType'],
+        status: data['status'],
+        createdAt: createdAt,
+      );
+    }).toList();
+  }
 
   // Update only themes
   Future<void> updateThemePreferences(bool darkMode, Color colorSeed) async {

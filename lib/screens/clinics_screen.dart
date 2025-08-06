@@ -580,17 +580,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
                               return buildClinicCard(
                                 context,
-                                clinic.name,
-                                clinic.address,
-                                displayData['distance'],
-                                displayData['displaySpecialty'],
-                                displayData['displayHours'],
-                                clinic.lat,
-                                clinic.lon,
-                                clinic.placeId,
-                                phone: clinic.phone,
-                                website: clinic.website,
-                                isOpen: displayData['isOpen'],
+                                clinic
                               );
                             }).toList(),
                           );
@@ -691,35 +681,33 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     return degrees * (math.pi / 180);
   }
 
-  Widget buildClinicCard(
-      BuildContext context,
-      String name,
-      String address,
-      String distance,
-      String specialties,
-      String openingHours,
-      double lat,
-      double lon,
-      String placeId,
-      {String? phone,
-      String? website,
-      bool isOpen = false}) {
+  Widget buildClinicCard(BuildContext context, Clinic clinic) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final isSaved = _savedClinicPlaceIds.contains(placeId);
+    final isSaved = _savedClinicPlaceIds.contains(clinic.placeId);
 
-    // print(openingHours);
-    // print(_savedClinicPlaceIds);
+    final displayData = getClinicDisplayInfo(
+      currentLat: _currentLocation?.latitude,
+      currentLon: _currentLocation?.longitude,
+      calculateDistance: _calculateDistance,
+      clinic: clinic,
+    );
+
+    final String distance = displayData['distance'];
+    final String specialties = displayData['displaySpecialty'];
+    final String openingHours = displayData['displayHours'];
+    final bool isOpen = displayData['isOpen'];
 
     return GestureDetector(
       onTap: () {
-        _mapController.move(LatLng(lat, lon), 17.0);
+        _mapController.move(LatLng(clinic.lat, clinic.lon), 17.0);
 
         // Reorder list: move this clinic to the top
         setState(() {
-          final clickedIndex = _loadedClinics.indexWhere(
-              (c) => c.lat == lat && c.lon == lon); // match by coordinates
+          final clickedIndex = _loadedClinics.indexWhere((c) =>
+              c.lat == clinic.lat &&
+              c.lon == clinic.lon); // match by coordinates
           if (clickedIndex != -1) {
             final clickedClinic = _loadedClinics.removeAt(clickedIndex);
             _loadedClinics.insert(0, clickedClinic);
@@ -745,11 +733,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: colorScheme.outline.withValues(alpha: 0.2),
+            color: colorScheme.outline.withOpacity(0.2),
           ),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: isDark ? 0.3 : 0.1),
+              color: colorScheme.shadow.withOpacity(isDark ? 0.3 : 0.1),
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -757,22 +745,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         ),
         child: Row(
           children: [
-            // Clinic icon with theme colors
-            // Container(
-            //   width: 56,
-            //   height: 56,
-            //   decoration: BoxDecoration(
-            //     color: colorScheme.primaryContainer,
-            //     borderRadius: BorderRadius.circular(12),
-            //   ),
-            //   child: Icon(
-            //     Icons.local_hospital,
-            //     color: colorScheme.primary,
-            //     size: 28,
-            //   ),
-            // ),
-            // SizedBox(width: 16),
-
             // Clinic details
             Expanded(
               child: Column(
@@ -783,7 +755,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          name,
+                          clinic.name,
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
@@ -890,8 +862,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) =>
-                                          MakeAppointmentsScreen(
-                                              [name, address])),
+                                          MakeAppointmentsScreen(clinic)),
                                 );
                               },
                               style: FilledButton.styleFrom(
@@ -906,10 +877,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 ),
                                 elevation: 0,
                                 shadowColor: Colors.transparent,
-                                // textStyle: TextStyle(
-                                //   fontSize: 12,
-                                //   fontWeight: FontWeight.w500,
-                                // ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -933,12 +900,13 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                             ),
 
                             // Phone button (if phone exists)
-                            if (phone != null && phone.isNotEmpty) ...[
+                            if (clinic.phone != null && clinic.phone!.isNotEmpty)
+                            ...[
                               SizedBox(width: 8),
                               FilledButton.tonal(
                                 onPressed: () async {
                                   final Uri phoneUri =
-                                      Uri(scheme: 'tel', path: phone);
+                                      Uri(scheme: 'tel', path: clinic.phone);
                                   if (await canLaunchUrl(phoneUri)) {
                                     await launchUrl(phoneUri);
                                   }
@@ -957,10 +925,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   ),
                                   elevation: 0,
                                   shadowColor: Colors.transparent,
-                                  // textStyle: TextStyle(
-                                  //   fontSize: 12,
-                                  //   fontWeight: FontWeight.w500,
-                                  // ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -985,11 +949,13 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                             ],
 
                             // Website button (if website exists)
-                            if (website != null && website.isNotEmpty) ...[
+                            if (clinic.website != null &&
+                                clinic.website!.isNotEmpty) ...[
                               SizedBox(width: 8),
                               FilledButton.tonal(
                                 onPressed: () async {
-                                  final Uri websiteUri = Uri.parse(website);
+                                  final Uri websiteUri =
+                                      Uri.parse(clinic.website!);
                                   if (await canLaunchUrl(websiteUri)) {
                                     await launchUrl(websiteUri);
                                   }
@@ -1008,10 +974,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   ),
                                   elevation: 0,
                                   shadowColor: Colors.transparent,
-                                  // textStyle: TextStyle(
-                                  //   fontSize: 12,
-                                  //   fontWeight: FontWeight.w500,
-                                  // ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -1041,9 +1003,9 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               onPressed: () {
                                 setState(() {
                                   if (isSaved) {
-                                    _savedClinicPlaceIds.remove(placeId);
+                                    _savedClinicPlaceIds.remove(clinic.placeId);
                                   } else {
-                                    _savedClinicPlaceIds.add(placeId);
+                                    _savedClinicPlaceIds.add(clinic.placeId);
                                   }
                                 });
                                 _saveClinicsFirebase(); // Save to Firebase

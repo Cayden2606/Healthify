@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:healthify/models/appointment.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
 import 'dart:ui';
+import 'package:intl/intl.dart';
 
 import '../utilities/status_bar_utils.dart';
 import 'clinics_screen.dart';
@@ -17,6 +19,8 @@ class AppointmentsScreen extends StatefulWidget {
 class _AppointmentsScreenState extends State<AppointmentsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final FirebaseCalls _firebaseCalls = FirebaseCalls();
+  late Future<List<Appointment>> _appointmentsFuture;
 
   final initials =
       '${appUser.name.isNotEmpty ? appUser.name[0] : ''}${appUser.nameLast.isNotEmpty ? appUser.nameLast[0] : ''}';
@@ -25,6 +29,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadAppointments();
+  }
+
+  void _loadAppointments() {
+    setState(() {
+      _appointmentsFuture = _firebaseCalls.getAppointments();
+    });
   }
 
   @override
@@ -69,7 +80,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                   color: theme.colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: theme.colorScheme.outline.withOpacity(0.12),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.12),
                     width: 1,
                   ),
                 ),
@@ -80,7 +91,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: theme.colorScheme.shadow.withOpacity(0.08),
+                        color: theme.colorScheme.shadow.withValues(alpha: 0.08),
                         offset: const Offset(0, 1),
                         blurRadius: 3,
                       ),
@@ -102,10 +113,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                   overlayColor: WidgetStateProperty.resolveWith<Color?>(
                     (Set<WidgetState> states) {
                       if (states.contains(WidgetState.hovered)) {
-                        return theme.colorScheme.onSurface.withOpacity(0.08);
+                        return theme.colorScheme.onSurface.withValues(alpha: 0.08);
                       }
                       if (states.contains(WidgetState.pressed)) {
-                        return theme.colorScheme.onSurface.withOpacity(0.12);
+                        return theme.colorScheme.onSurface.withValues(alpha: 0.12);
                       }
                       return null;
                     },
@@ -141,9 +152,9 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                   controller: _tabController,
                   children: [
                     // Upcoming Appointments Tab
-                    _buildUpcomingAppointments(theme),
+                    _buildAppointmentsList(theme, 'upcoming'),
                     // Missed Appointments Tab
-                    _buildMissedAppointments(theme),
+                    _buildAppointmentsList(theme, 'passed'),
                   ],
                 ),
               ),
@@ -176,13 +187,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: theme.colorScheme.shadow.withOpacity(0.12),
+                        color: theme.colorScheme.shadow.withValues(alpha: 0.12),
                         blurRadius: 24,
                         offset: Offset(0, -8),
                         spreadRadius: 0,
                       ),
                       BoxShadow(
-                        color: theme.colorScheme.primary.withOpacity(0.05),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.05),
                         blurRadius: 40,
                         offset: Offset(0, -12),
                         spreadRadius: 4,
@@ -205,7 +216,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                         padding: EdgeInsets.symmetric(vertical: 18),
                         elevation: 4,
                         shadowColor:
-                            theme.colorScheme.primary.withOpacity(0.25),
+                            theme.colorScheme.primary.withValues(alpha: 0.25),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
                         ),
@@ -227,90 +238,63 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
     );
   }
 
-  Widget _buildUpcomingAppointments(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20, right: 20),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            _buildAppointmentCard(
-              theme: theme,
-              serviceType: "Doctor Consult",
-              date: "Tomorrow",
-              time: "10:30 AM",
-              clinic: "Heart Care Center",
-              isUpcoming: true,
+  Widget _buildAppointmentsList(ThemeData theme, String status) {
+    return FutureBuilder<List<Appointment>>(
+      future: _appointmentsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(
+            child: Text(
+              'No appointments found.',
+              style: theme.textTheme.bodyLarge,
             ),
-            const SizedBox(height: 16),
-            _buildAppointmentCard(
-              theme: theme,
-              serviceType: "Doctor Consult",
-              date: "Dec 15, 2024",
-              time: "2:00 PM",
-              clinic: "Skin Health Clinic",
-              isUpcoming: true,
-            ),
-            const SizedBox(height: 16),
-            _buildAppointmentCard(
-              theme: theme,
-              serviceType: "Doctor Consult",
-              date: "Dec 15, 2024",
-              time: "2:00 PM",
-              clinic: "Skin Health Clinic",
-              isUpcoming: true,
-            ),
-            const SizedBox(height: 16),
-            _buildAppointmentCard(
-              theme: theme,
-              serviceType: "Doctor Consult",
-              date: "Dec 15, 2024",
-              time: "2:00 PM",
-              clinic: "Skin Health Clinic",
-              isUpcoming: true,
-            ),
-            const SizedBox(height: 16),
-            _buildAppointmentCard(
-              theme: theme,
-              serviceType: "Doctor Consult",
-              date: "Dec 15, 2024",
-              time: "2:00 PM",
-              clinic: "Skin Health Clinic",
-              isUpcoming: true,
-            ),
-            SizedBox(height: 120),
-          ],
-        ),
-      ),
-    );
-  }
+          );
+        }
 
-  Widget _buildMissedAppointments(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
-      child: Column(
-        children: [
-          _buildAppointmentCard(
-            theme: theme,
-            serviceType: "Doctor Consult",
-            date: "Dec 1, 2024",
-            time: "9:00 AM",
-            clinic: "Family Health Center",
-            isUpcoming: false,
-          ),
-        ],
-      ),
+        final appointments = snapshot.data!
+            .where((appt) => appt.status == status)
+            .toList();
+
+        if (appointments.isEmpty) {
+          return Center(
+            child: Text(
+              'No ${status} appointments.',
+              style: theme.textTheme.bodyLarge,
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+          itemCount: appointments.length,
+          itemBuilder: (context, index) {
+            final appointment = appointments[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: _buildAppointmentCard(
+                theme: theme,
+                appointment: appointment,
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
   Widget _buildAppointmentCard({
     required ThemeData theme,
-    required String serviceType,
-    required String date,
-    required String time,
-    required String clinic,
-    required bool isUpcoming,
+    required Appointment appointment,
   }) {
+    final bool isUpcoming = appointment.status == 'upcoming';
+    final date = appointment.appointmentDateTime;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -343,7 +327,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
               mainAxisSize: MainAxisSize.max,
               children: [
                 Text(
-                  "20",
+                  DateFormat('d').format(date),
                   style: theme.textTheme.headlineLarge?.copyWith(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -351,13 +335,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                   ),
                 ),
                 Text(
-                  "Jul",
+                  DateFormat('MMM').format(date),
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  "2025",
+                  DateFormat('y').format(date),
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 12,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -372,7 +356,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  clinic,
+                  appointment.clinic.name,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -380,14 +364,14 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "$time",
+                  DateFormat.jm().format(date), // Format time e.g. 5:08 PM
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  serviceType,
+                  appointment.serviceType,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
