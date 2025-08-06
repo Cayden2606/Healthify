@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'clinic.dart';
+
 class AppUser {
   String name;
   String nameLast;
@@ -12,6 +14,9 @@ class AppUser {
 
   bool darkMode;
   Color colorSeed;
+
+  List<Clinic> favoriteClinics;
+
   //TODO add contact, age, gender, etc
 
   AppUser({
@@ -25,5 +30,6 @@ class AppUser {
     required this.profilePic,
     this.darkMode = false,
     this.colorSeed = const Color(0xFFBBDEFB),
+    this.favoriteClinics = const [],
   });
 }

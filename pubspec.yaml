@@ -65,6 +65,8 @@ dependencies:
   flutter_svg: ^2.0.7
   # More icons
   font_awesome_flutter: ^10.5.0
+  # Custom Splash Screen
+  flutter_native_splash: ^2.4.6
 
 
 
@@ -173,3 +175,11 @@ flutter:
           weight: 900
           style: italic
   
+flutter_native_splash:
+  background_image: images/gradient_bg.png
+  image: images/splash_logo.png
+  android_12:
+    image: images/splash_logo_shadow.png
+    android_gravity: centerInside
+    color: "#3D9641"
+    icon_background_color: "#3D9641"

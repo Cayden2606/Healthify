@@ -623,6 +623,22 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
       }
     }
 
+    if (displaySpecialty.isNotEmpty) {
+      // Replace ';' with ', ' and '_' with ' '
+      String cleaned =
+          displaySpecialty.replaceAll(';', ', ').replaceAll('_', ' ');
+
+      // Split by ', ', camelcase each item, then join again
+      List<String> specialties = cleaned.split(', ').map((item) {
+        return item.split(' ').map((word) {
+          if (word.isEmpty) return '';
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        }).join(' ');
+      }).toList();
+
+      displaySpecialty = specialties.join(', ');
+    }
+
     return {
       'distance': distance,
       'displayHours': displayHours,
