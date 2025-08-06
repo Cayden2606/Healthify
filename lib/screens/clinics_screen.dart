@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:healthify/utilities/api_calls.dart';
+import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
@@ -77,11 +78,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   @override
   void initState() {
     super.initState();
+    FirebaseCalls().getUserSavedClinics();
     _getCurrentLocation();
 
     _clinicsFuture = ApiCalls().fetchClinics(_selectedRegion);
-    _markersFuture =
-        _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+    _markersFuture = _clinicsFuture.then((clinics) => _generateMarkers(clinics));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final RenderBox? box =
@@ -92,6 +93,18 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         _fabBottomNotifier.value = (_stackHeight * _controller.size) + 24;
       }
     });
+
+    Future<void> _loadSavedClinics() async {
+      try {
+        final savedClinics = await FirebaseCalls().getUserSavedClinics();
+        setState(() {
+          _savedClinicPlaceIds =
+              savedClinics.map((clinic) => clinic.placeId).toSet();
+        });
+      } catch (e) {
+        print('Error loading saved clinics: $e');
+      }
+    }
   }
 
   @override
@@ -125,7 +138,11 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     }
     if (selectedButtonIndex == 2) {
       setState(() {
-        _markersFuture = Future.value(_generateMarkers(_loadedClinics));
+        _clinicsFuture = FirebaseCalls()
+            .getUserSavedClinics()
+            .then((clinicsSet) => clinicsSet.toList());
+        _markersFuture =
+            _clinicsFuture.then((clinics) => _generateMarkers(clinics));
       });
     }
     // Open across SG?
@@ -318,6 +335,17 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     }));
 
     return markers;
+  }
+
+  void _saveClinicsFirebase() async {
+    // Save the _savedClinicPlaceIds to Firebase
+    try {
+      await FirebaseCalls().saveUserSavedClinics(
+        _loadedClinics.where((clinic) => _savedClinicPlaceIds.contains(clinic.placeId)).toSet(),
+      );
+    } catch (e) {
+      print('Error saving clinics to Firebase: $e');
+    }
   }
 
   @override
@@ -684,7 +712,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     final isSaved = _savedClinicPlaceIds.contains(placeId);
 
     // print(openingHours);
-    print(_savedClinicPlaceIds);
+    // print(_savedClinicPlaceIds);
 
     return GestureDetector(
       onTap: () {
@@ -1020,6 +1048,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                     _savedClinicPlaceIds.add(placeId);
                                   }
                                 });
+                                _saveClinicsFirebase(); // Save to Firebase
                               },
                               style: FilledButton.styleFrom(
                                 backgroundColor: colorScheme.surfaceVariant,
@@ -1069,19 +1098,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         ),
       ),
     );
-  }
-
-// Helper function to parse opening hours
-  bool _isClinicOpenNow(String openingHours) {
-    // Parse opening_hours format like "Mo-Sa 09:00-21:00; PH,Su 09:00-17:00"
-    // This is a simplified version - you'd need more robust parsing
-    final now = DateTime.now();
-    final currentDay = now.weekday; // 1 = Monday, 7 = Sunday
-    final currentTime = now.hour * 60 + now.minute; // Minutes since midnight
-
-    // For demo purposes, return true if current time is between 8:00-20:00
-    // You should implement proper parsing of the opening_hours string
-    return currentTime >= 8 * 60 && currentTime <= 20 * 60;
   }
 
   Widget _buildNavButton(int index, IconData icon, String label) {

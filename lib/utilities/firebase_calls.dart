@@ -2,8 +2,9 @@ import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:healthify/models/clinic.dart';
 
-import '../models/app_user.dart';
+import 'package:healthify/models/app_user.dart';
 
 late AppUser appUser;
 bool newUser = false;
@@ -90,6 +91,58 @@ class FirebaseCalls {
       });
     }
   }
+
+  Future<void> saveUserSavedClinics(Set<Clinic> savedClinics) async {
+    QuerySnapshot querySnap = await appUsersCollection
+        .where('userid', isEqualTo: auth.currentUser?.uid)
+        .get();
+
+    if (querySnap.docs.isNotEmpty) {
+      QueryDocumentSnapshot userDoc = querySnap.docs[0];
+      final savedClinicsCollection = userDoc.reference.collection('savedClinics');
+
+      // Use a batch write to perform multiple operations atomically
+      final batch = FirebaseFirestore.instance.batch();
+
+      // Optional: Clear existing saved clinics if you want to replace them
+      final existingClinicsSnapshot = await savedClinicsCollection.get();
+      for (var doc in existingClinicsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Add the new set of clinics
+      for (var clinic in savedClinics) {
+        final clinicDocRef = savedClinicsCollection.doc(clinic.placeId);
+        batch.set(clinicDocRef, clinic.toJson());
+      }
+
+      await batch.commit();
+    } else {
+      throw Exception('User not found');
+    }
+  }
+
+  Future<Set<Clinic>> getUserSavedClinics() async {
+    QuerySnapshot querySnap = await appUsersCollection
+        .where('userid', isEqualTo: auth.currentUser?.uid)
+        .get();
+
+    if (querySnap.docs.isNotEmpty) {
+      QueryDocumentSnapshot userDoc = querySnap.docs[0];
+      final savedClinicsSnapshot =
+          await userDoc.reference.collection('savedClinics').get();
+
+      if (savedClinicsSnapshot.docs.isNotEmpty) {
+        return savedClinicsSnapshot.docs
+            .map((doc) => Clinic.fromJson(doc.data() as Map<String, dynamic>)) // Assumes Clinic has a fromJson() factory
+            .toSet();
+      }
+      return <Clinic>{}; // Return an empty set if no clinics are saved
+    } else {
+      throw Exception('User not found');
+    }
+  }
+
   //TODO addAppointment() and getAppointments
 
   // Update only themes

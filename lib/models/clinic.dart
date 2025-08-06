@@ -68,4 +68,28 @@ class Clinic {
       lon: (geometry['coordinates']?[0] ?? 0).toDouble(),
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'properties': {
+        'name': name,
+        'address_line2': address,
+        'website': website,
+        'contact': {'phone': phone, 'email': email},
+        'opening_hours': openingHours,
+        'place_id': placeId,
+        'operator': operator,
+        'branch': branch,
+        'facilities': {
+          'wheelchair': wheelchairAccessible,
+          'wheelchair_details': {'condition': wheelchairCondition}
+        },
+        'datasource': {
+          'raw': {'healthcare:speciality': speciality}
+        }
+      },
+      'geometry': {
+        'coordinates': [lon, lat]
+      }
+    };
+  }
 }
