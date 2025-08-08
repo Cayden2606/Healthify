@@ -45,7 +45,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
   Widget build(BuildContext context) {
     // Change status bar color
     StatusBarUtils.setStatusBar(context);
-
     ThemeData theme = Theme.of(context);
 
     final size = MediaQuery.of(context).size;
@@ -110,10 +109,12 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                   overlayColor: WidgetStateProperty.resolveWith<Color?>(
                     (Set<WidgetState> states) {
                       if (states.contains(WidgetState.hovered)) {
-                        return theme.colorScheme.onSurface.withValues(alpha: 0.08);
+                        return theme.colorScheme.onSurface
+                            .withValues(alpha: 0.08);
                       }
                       if (states.contains(WidgetState.pressed)) {
-                        return theme.colorScheme.onSurface.withValues(alpha: 0.12);
+                        return theme.colorScheme.onSurface
+                            .withValues(alpha: 0.12);
                       }
                       return null;
                     },

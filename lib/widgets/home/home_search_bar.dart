@@ -31,26 +31,28 @@ class HomeSearchBar extends StatelessWidget {
           ),
         ],
       ),
-      child: TextField(
-        decoration: InputDecoration(
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 15, right: 5),
-            child: Icon(
-              Icons.search,
-              color: colorScheme.onSurface.withAlpha(150),
+      child: SizedBox(
+        height: 60,
+        child: TextField(
+          decoration: InputDecoration(
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 15, right: 5),
+              child: Icon(
+                Icons.search,
+                color: colorScheme.onSurface.withAlpha(150),
+              ),
             ),
+            hintText: "Search clinics, services...",
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurface.withAlpha(150),
+              fontWeight: FontWeight.w400,
+            ),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
           ),
-          hintText: "Search clinics, services...",
-          hintStyle: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurface.withAlpha(150),
-            fontWeight: FontWeight.w400,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: colorScheme.onSurface,
           ),
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
-        ),
-        style: theme.textTheme.bodyLarge?.copyWith(
-          color: colorScheme.onSurface,
         ),
       ),
     );

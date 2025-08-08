@@ -19,7 +19,10 @@ import 'package:healthify/utilities/geoapify_calls.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
 
 class ClinicsScreen extends StatefulWidget {
-  const ClinicsScreen({Key? key}) : super(key: key);
+  // Make the clinic parameter optional
+  final Clinic? passedClinic;
+
+  const ClinicsScreen({Key? key, this.passedClinic}) : super(key: key);
 
   @override
   State<ClinicsScreen> createState() => _ClinicsScreenState();
@@ -45,6 +48,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     'Search by Distance',
     'Saved Clinics',
     'Search by Open Status',
+    'Selected Clinic', // Add this for when a clinic is passed
   ];
 
   String _selectedRegion = 'Central';
@@ -79,8 +83,26 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     _loadSavedClinics();
     _getCurrentLocation();
 
-    _clinicsFuture = _getInitialNearbyClinics();
-    _markersFuture = _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+    // Check if a clinic was passed and set up accordingly
+    if (widget.passedClinic != null) {
+      selectedButtonIndex = 4; // New index for passed clinic
+      _selectedSearch = 'Selected Clinic';
+      _clinicsFuture = Future.value([widget.passedClinic!]);
+      _markersFuture =
+          _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+
+      // Set the map to show the passed clinic location
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (widget.passedClinic != null) {
+          _mapController.move(
+              LatLng(widget.passedClinic!.lat, widget.passedClinic!.lon), 16);
+        }
+      });
+    } else {
+      _clinicsFuture = _getInitialNearbyClinics();
+      _markersFuture =
+          _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final RenderBox? box =
@@ -116,7 +138,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         if (processedIds.add(clinic.placeId)) {
           // .add() returns true if the item was added (i.e., it was not already in the set)
           FirebaseCalls().addClinicIfNotFound(clinic);
-        };
+        }
+        ;
       }
       return clinics;
     } else {
@@ -138,7 +161,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     }
   }
 
-  // FUnction that takes in selectedButtonIndex, if 0 do the nearby
+  // Function that takes in selectedButtonIndex, if 0 do the nearby
   void _searchByOptions(int selectedButtonIndex) {
     // Nearby 5km radius
     if (selectedButtonIndex == 1) {
@@ -153,7 +176,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
             final Set<String> processedIds = {};
             if (processedIds.add(clinic.placeId)) {
               FirebaseCalls().addClinicIfNotFound(clinic);
-            };
+            }
+            ;
           }
           return clinics;
         });
@@ -164,12 +188,14 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     // Regions Default -> Central
     else if (selectedButtonIndex == 0) {
       setState(() {
-        _clinicsFuture = GeoApifyApiCalls().fetchClinics(_selectedRegion).then((clinics) {
+        _clinicsFuture =
+            GeoApifyApiCalls().fetchClinics(_selectedRegion).then((clinics) {
           for (final clinic in clinics) {
             final Set<String> processedIds = {};
             if (processedIds.add(clinic.placeId)) {
               FirebaseCalls().addClinicIfNotFound(clinic);
-            };
+            }
+            ;
           }
           return clinics;
         });
@@ -186,20 +212,34 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
       });
     }
     // Open across SG?
-   else if (selectedButtonIndex == 3) {
+    else if (selectedButtonIndex == 3) {
       setState(() {
-        _clinicsFuture = GeoApifyApiCalls().fetchClinics('Singapore').then((clinics) {
+        _clinicsFuture =
+            GeoApifyApiCalls().fetchClinics('Singapore').then((clinics) {
           for (final clinic in clinics) {
             final Set<String> processedIds = {};
             if (processedIds.add(clinic.placeId)) {
               FirebaseCalls().addClinicIfNotFound(clinic);
-            };
+            }
+            ;
           }
           return clinics;
         });
         _markersFuture =
             _clinicsFuture.then((clinics) => _generateMarkers(clinics));
       });
+    }
+    // Handle passed clinic case (selectedButtonIndex == 4)
+    else if (selectedButtonIndex == 4 && widget.passedClinic != null) {
+      setState(() {
+        _clinicsFuture = Future.value([widget.passedClinic!]);
+        _markersFuture =
+            _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+      });
+
+      // Move map to the passed clinic location
+      _mapController.move(
+          LatLng(widget.passedClinic!.lat, widget.passedClinic!.lon), 17.0);
     }
   }
 
@@ -238,8 +278,8 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         _isLoadingLocation = false;
       });
 
-      // Move map to current location
-      if (_currentLocation != null) {
+      // Move map to current location only if no clinic was passed
+      if (_currentLocation != null && widget.passedClinic == null) {
         _mapController.move(_currentLocation!, 16);
       }
     } catch (e) {
@@ -268,13 +308,15 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
           onRegionSelected: (String region) {
             setState(() {
               _selectedRegion = region;
-              _clinicsFuture =
-                  GeoApifyApiCalls().fetchClinics(_selectedRegion).then((clinics) {
+              _clinicsFuture = GeoApifyApiCalls()
+                  .fetchClinics(_selectedRegion)
+                  .then((clinics) {
                 for (final clinic in clinics) {
                   final Set<String> processedIds = {};
                   if (processedIds.add(clinic.placeId)) {
                     FirebaseCalls().addClinicIfNotFound(clinic);
-                  };
+                  }
+                  ;
                 }
                 return clinics;
               });
@@ -288,8 +330,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
   }
 
   Future<List<Marker>> _generateMarkers(List<Clinic> clinicsList) async {
-    // List<Clinic> clinicsList = await GeoApifyApiCalls().fetchClinics(region);
-
     List<Marker> markers = [];
 
     // Filter clinics based on selected button
@@ -297,7 +337,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
 
     if (selectedButtonIndex == 2) {
       // Show only saved clinics
-
       filteredClinics = clinicsList
           .where((clinic) => _savedClinicPlaceIds.contains(clinic.placeId))
           .toList();
@@ -322,7 +361,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
         alignment: Alignment.topCenter,
         rotate: true,
         child: GestureDetector(
-          onTap: () {            
+          onTap: () {
             setState(() {
               final clickedIndex = _loadedClinics.indexWhere(
                   (c) => c.lat == clinic.lat && c.lon == clinic.lon);
@@ -362,10 +401,12 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     return markers;
   }
 
-void _saveClinicsFirebase() async {
+  void _saveClinicsFirebase() async {
     // Save the _savedClinicPlaceIds to Firebase
     try {
-      await FirebaseCalls().saveUserSavedClinics(_savedClinicPlaceIds,);
+      await FirebaseCalls().saveUserSavedClinics(
+        _savedClinicPlaceIds,
+      );
     } catch (e) {
       print('Error saving clinics to Firebase: $e');
     }
@@ -406,6 +447,7 @@ void _saveClinicsFirebase() async {
                       colorScheme: colorScheme,
                       theme: theme),
                   SizedBox(height: 16),
+                  // Only show navigation buttons if no clinic was passed
                   Row(
                     children: [
                       _buildNavButton(0, Icons.location_city, 'Regions'),
@@ -582,6 +624,7 @@ void _saveClinicsFirebase() async {
                               return displayData['isOpen'] == true;
                             }).toList();
                           }
+                          // For selectedButtonIndex == 4 (passed clinic), no filtering needed
 
                           //else if ( it is from Search bar ) { filter results with the name of it? }
 
@@ -590,14 +633,17 @@ void _saveClinicsFirebase() async {
                                 ? "No saved clinics."
                                 : selectedButtonIndex == 3
                                     ? "No open clinics found."
-                                    : "No clinics found.";
+                                    : selectedButtonIndex == 4
+                                        ? "Selected clinic not available."
+                                        : "No clinics found.";
                             return Center(child: Text(emptyMessage));
                           }
 
                           return Column(
-                            children: clinics.map(
-                              (clinic) => buildClinicCard(context, clinic)
-                            ).toList(),
+                            children: clinics
+                                .map((clinic) =>
+                                    buildClinicCard(context, clinic))
+                                .toList(),
                           );
                         },
                       )
@@ -612,6 +658,7 @@ void _saveClinicsFirebase() async {
     );
   }
 
+  // Rest of your existing methods remain the same...
   Map<String, dynamic> getClinicDisplayInfo({
     required double? currentLat,
     required double? currentLon,
@@ -915,8 +962,8 @@ void _saveClinicsFirebase() async {
                             ),
 
                             // Phone button (if phone exists)
-                            if (clinic.phone != null && clinic.phone!.isNotEmpty)
-                            ...[
+                            if (clinic.phone != null &&
+                                clinic.phone!.isNotEmpty) ...[
                               SizedBox(width: 8),
                               FilledButton.tonal(
                                 onPressed: () async {
@@ -1026,8 +1073,10 @@ void _saveClinicsFirebase() async {
                                   // If on the "Saved" tab, refresh the markers
                                   if (selectedButtonIndex == 2) {
                                     // Re-fetch the saved clinics and regenerate markers
-                                    _clinicsFuture = FirebaseCalls().getUserSavedClinics();
-                                    _markersFuture = _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+                                    _clinicsFuture =
+                                        FirebaseCalls().getUserSavedClinics();
+                                    _markersFuture = _clinicsFuture.then(
+                                        (clinics) => _generateMarkers(clinics));
                                   }
                                 });
                                 _saveClinicsFirebase(); // Save to Firebase
@@ -1096,8 +1145,12 @@ void _saveClinicsFirebase() async {
 
           _searchByOptions(index);
 
-          // Regions selections
-          _selectedSearch = _searchBy[index];
+          // Update search title based on selection
+          if (index == 4) {
+            _selectedSearch = 'Selected Clinic';
+          } else {
+            _selectedSearch = _searchBy[index];
+          }
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 6),

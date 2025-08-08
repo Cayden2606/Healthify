@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:healthify/screens/health_assistant.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +16,8 @@ import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:healthify/screens/login_screen.dart';
 import 'package:healthify/screens/update_app_user_screen.dart';
 import 'package:healthify/screens/clinics_screen.dart';
+
+import 'package:healthify/screens/onboarding_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +49,24 @@ class MyAppState extends State<MyApp> {
   Color _userColor = Colors.blue[100]!;
   bool _themeInitialized = false;
 
+  bool _showOnboarding = true;
+
+  Future<void> _checkFirstLaunch() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool seen = prefs.getBool('onboarding_seen') ?? false;
+    setState(() {
+      _showOnboarding = !seen;
+    });
+  }
+
+  Future<void> _completeOnboarding() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_seen', true);
+    setState(() {
+      _showOnboarding = false;
+    });
+  }
+
   static MyAppState? of(BuildContext context) {
     return context.findAncestorStateOfType<MyAppState>();
   }
@@ -53,6 +74,7 @@ class MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    _checkFirstLaunch();
     initializeTheme();
   }
 
@@ -103,7 +125,9 @@ class MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const LoginScreen(),
+        '/': (context) => _showOnboarding
+            ? OnboardingScreen(onDone: _completeOnboarding)
+            : const LoginScreen(),
         '/home': (context) => HomeScreen(),
         '/clinics': (context) => const ClinicsScreen(),
         '/user': (context) => const UpdateAppUserScreen(),
