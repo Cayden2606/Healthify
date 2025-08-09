@@ -107,7 +107,7 @@ class _UpcomingScheduleCardState extends State<UpcomingScheduleCard> {
               borderRadius: BorderRadius.circular(20),
               onTap: onTap,
               child: Container(
-                height: 130,
+                constraints: const BoxConstraints(minHeight: 130),
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -189,85 +189,88 @@ class _UpcomingScheduleCardState extends State<UpcomingScheduleCard> {
         final countdownText = getRelativeTime(appointmentDateTime) + _nowTick;
 
         return buildShell(
-          Row(
-            children: [
-              buildDateTile(theme, colorScheme,
-                  day: day, month: month, year: year),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      appointment.clinic.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    // const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          timeString,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildDateTile(theme, colorScheme,
+                    day: day, month: month, year: year),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text(
+                        appointment.clinic.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: colorScheme.secondaryContainer
-                                .withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                                color: colorScheme.secondary.withAlpha(10),
-                                width: 1),
-                          ),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 250),
-                            transitionBuilder: (child, anim) => FadeTransition(
-                              opacity: anim,
-                              child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0.0, 0.15),
-                                  end: Offset.zero,
-                                ).animate(anim),
-                                child: child,
-                              ),
-                            ),
-                            child: Text(
-                              getRelativeTime(appointmentDateTime),
-                              key: ValueKey<String>(countdownText),
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.onSecondaryContainer,
-                              ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            timeString,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      appointment.serviceType,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 14,
-                        color: colorScheme.onSurfaceVariant,
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: colorScheme.secondaryContainer
+                                  .withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                  color: colorScheme.secondary.withAlpha(10),
+                                  width: 1),
+                            ),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 250),
+                              transitionBuilder: (child, anim) =>
+                                  FadeTransition(
+                                opacity: anim,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0.0, 0.15),
+                                    end: Offset.zero,
+                                  ).animate(anim),
+                                  child: child,
+                                ),
+                              ),
+                              child: Text(
+                                getRelativeTime(appointmentDateTime),
+                                key: ValueKey<String>(countdownText),
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSecondaryContainer,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      Text(
+                        appointment.serviceType,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 14,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           onTap: onTap,
         );
@@ -278,7 +281,6 @@ class _UpcomingScheduleCardState extends State<UpcomingScheduleCard> {
   Widget buildDateTile(ThemeData theme, ColorScheme colorScheme,
       {required String day, required String month, required String year}) {
     return Container(
-      height: double.infinity,
       padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest,

@@ -17,23 +17,32 @@ class StatusBarUtils {
     );
   }
 
-  /// Alternative method with custom color option
-  static void setCustomStatusBar(BuildContext context,
-      {Color? backgroundColor}) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
+  static SystemUiOverlayStyle styleFor(BuildContext context,
+      {required Color background}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: backgroundColor ?? Colors.transparent,
-        statusBarIconBrightness:
-            isDarkMode ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
-      ),
+    return SystemUiOverlayStyle(
+      statusBarColor: background,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
     );
   }
+  //
+  // static void setCustomStatusBar(BuildContext context,
+  //     {Color? backgroundColor}) {
+  //   final theme = Theme.of(context);
+  //   final isDarkMode = theme.brightness == Brightness.dark;
+  //
+  //   SystemChrome.setSystemUIOverlayStyle(
+  //     SystemUiOverlayStyle(
+  //       statusBarColor: backgroundColor ?? Colors.transparent,
+  //       statusBarIconBrightness:
+  //           isDarkMode ? Brightness.light : Brightness.dark,
+  //       statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
+  //     ),
+  //   );
+  // }
 
-  /// Get SystemUiOverlayStyle for AppBar usage (NEW METHOD)
   static SystemUiOverlayStyle getStatusBarStyle(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;

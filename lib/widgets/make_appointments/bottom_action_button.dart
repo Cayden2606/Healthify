@@ -275,7 +275,8 @@ class BottomActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final bool isEdit = appointment != null;
+    final bool isEdit =
+        appointment != null && appointment!.status == 'upcoming';
 
     final canSubmit = selectedCategory != null &&
         selectedService != null &&
@@ -346,28 +347,54 @@ class BottomActionButton extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: !canSubmit
-                        ? null
-                        : () =>
-                            _bookAppointment(context, theme, isEdit: isEdit),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      minimumSize: const Size(double.infinity, 0),
-                    ),
-                    child: Text(
-                      isEdit ? 'Save Changes' : 'Book Appointment',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.1,
-                        color: theme.colorScheme.onPrimary,
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: isEdit ? 4 : 1, // bigger width for main button
+                        child: FilledButton(
+                          onPressed: !canSubmit
+                              ? null
+                              : () => _bookAppointment(context, theme,
+                                  isEdit: isEdit),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            isEdit ? 'Save Changes' : 'Book Appointment',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.1,
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      if (isEdit) ...[
+                        const SizedBox(width: 8), // space between buttons
+                        SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: FilledButton(
+                            onPressed: () => _confirmAndDelete(context, theme),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: theme.colorScheme.error,
+                              foregroundColor: theme.colorScheme.onError,
+                              padding: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: const Icon(Icons.delete_forever),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -376,6 +403,43 @@ class BottomActionButton extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmAndDelete(BuildContext context, ThemeData theme) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete appointment?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await FirebaseCalls().deleteAppointment(appointment!.id);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const home_screen.HomeScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      _showError(context, theme, e.toString());
+    }
   }
 
   Future<void> _bookAppointment(BuildContext context, ThemeData theme,

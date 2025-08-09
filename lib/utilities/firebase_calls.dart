@@ -231,6 +231,37 @@ class FirebaseCalls {
     await appointmentsCollection.doc(id).update(data);
   }
 
+  Future<void> deleteAppointment(
+    String id, {
+    bool soft = false, // set true to just mark as cancelled
+  }) async {
+    final user = auth.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    final ref = appointmentsCollection.doc(id);
+    final snap = await ref.get();
+
+    if (!snap.exists) {
+      throw Exception('Appointment not found');
+    }
+
+    final data = snap.data() as Map<String, dynamic>;
+    if (data['userId'] != user.uid) {
+      throw Exception('You are not allowed to delete this appointment');
+    }
+
+    if (soft) {
+      await ref.update({
+        'status': 'cancelled',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } else {
+      await ref.delete();
+    }
+  }
+
   Future<List<Appointment>> getAppointments() async {
     final user = auth.currentUser;
     if (user == null) throw Exception('User not logged in');

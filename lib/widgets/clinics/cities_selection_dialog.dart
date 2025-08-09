@@ -196,14 +196,13 @@ class _CitiesSelectionDialogState extends State<CitiesSelectionDialog>
                                           children: [
                                             Text(
                                               region,
-                                              style: theme
-                                                  .textTheme.titleMedium
+                                              style: theme.textTheme.titleMedium
                                                   ?.copyWith(
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
                                             Text(
-                                              _getRegionDescription(region),
+                                              "${_getRegionDescription(region)} Singapore",
                                               style: theme.textTheme.bodySmall
                                                   ?.copyWith(
                                                 color: colorScheme

@@ -44,10 +44,12 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
   @override
   Widget build(BuildContext context) {
     // Change status bar color
-    StatusBarUtils.setStatusBar(context);
+    // StatusBarUtils.setStatusBar(context);
     ThemeData theme = Theme.of(context);
 
     final size = MediaQuery.of(context).size;
+    final barColor = theme.colorScheme.primaryFixed.withValues(alpha: 0.2);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -55,7 +57,12 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        backgroundColor: theme.colorScheme.primaryFixed.withValues(alpha: 0.2),
+        backgroundColor: barColor,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        systemOverlayStyle:
+            StatusBarUtils.styleFor(context, background: barColor),
       ),
       body: Stack(
         children: [
