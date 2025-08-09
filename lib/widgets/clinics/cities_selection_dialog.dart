@@ -227,8 +227,6 @@ class _CitiesSelectionDialogState extends State<CitiesSelectionDialog>
                         },
                       ),
                     ),
-
-                    // Action Buttons
                     Container(
                       padding: const EdgeInsets.all(24),
                       child: Row(
