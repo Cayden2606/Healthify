@@ -23,6 +23,7 @@ class UpdateAppUserScreen extends StatefulWidget {
 class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
   TextEditingController firstNameController = TextEditingController();
   TextEditingController lastNameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   // TextEditingController contactController = TextEditingController();
   PhoneController phoneController = PhoneController(PhoneNumber.parse('+65'));
   TextEditingController ageController = TextEditingController();
@@ -104,6 +105,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                   firstNameController.text = doc.get('name') ?? '';
                   lastNameController.text = doc.get('nameLast') ?? '';
                   // contactController.text = doc.get('contact') ?? '';
+                  emailController.text = doc.get('email') ?? '';
                   ageController.text = doc.get('age') ?? '';
                   genderController.text = doc.get('gender') ?? '';
 
@@ -257,6 +259,38 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                             ),
                           ),
                           Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
+                            child: TextFormField(
+                              style: theme.textTheme.headlineSmall,
+                              textAlign: TextAlign.left,
+                              keyboardType: TextInputType.emailAddress,
+                              autofillHints: const [AutofillHints.email],
+                              decoration: InputDecoration(
+                                labelText: 'Email *',
+                                labelStyle: theme.textTheme.bodyMedium,
+                                border: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16)),
+                                ),
+                              ),
+                              controller: emailController,
+                              validator: (value) {
+                                final trimmedValue = value?.trim() ?? '';
+                                if (trimmedValue.isEmpty) {
+                                  return 'Please enter your email';
+                                }
+                                final emailRegex =
+                                    RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                                if (!emailRegex.hasMatch(trimmedValue)) {
+                                  return 'Please enter a valid email';
+                                }
+                                return null;
+                              },
+                              onSaved: (value) =>
+                                  emailController.text = value!.trim(),
+                            ),
+                          ),
+                          Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Row(
                               children: [
@@ -359,7 +393,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                               appUser = AppUser(
                                 name: firstNameController.text,
                                 nameLast: lastNameController.text,
-                                email: auth.currentUser?.email ?? "",
+                                email: emailController.text,
                                 userid: auth.currentUser?.uid ?? "",
                                 contact: phoneNumber,
                                 age: ageController.text.toString(),

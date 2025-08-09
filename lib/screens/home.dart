@@ -137,7 +137,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       theme: theme),
                   const SizedBox(height: 20),
                   // Steps Widget
-                  StepsCard(colorScheme: colorScheme, theme: theme, steps: _steps),
+                  StepsCard(
+                      colorScheme: colorScheme, theme: theme, steps: _steps),
                   const SizedBox(height: 20),
                   // Upcoming Schedule
                   Text(

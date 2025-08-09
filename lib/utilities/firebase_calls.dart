@@ -15,7 +15,7 @@ CollectionReference appUsersCollection =
     FirebaseFirestore.instance.collection('appUsers');
 CollectionReference appointmentsCollection =
     FirebaseFirestore.instance.collection('appointments');
-CollectionReference clinicsCollection = 
+CollectionReference clinicsCollection =
     FirebaseFirestore.instance.collection('clinics');
 
 class FirebaseCalls {
@@ -71,6 +71,7 @@ class FirebaseCalls {
       await doc.reference.update({
         'name': appUser.name,
         'nameLast': appUser.nameLast,
+        'email': appUser.email,
         'age': appUser.age,
         'gender': appUser.gender,
         'contact': appUser.contact,
@@ -174,6 +175,7 @@ class FirebaseCalls {
   Future<void> addAppointment({
     required String placeId,
     required DateTime appointmentDateTime,
+    required String serviceCategory,
     required String serviceType,
     String additionalInfo = '',
   }) async {
@@ -186,6 +188,7 @@ class FirebaseCalls {
       'userId': user.uid,
       'placeId': placeId, // Store the entire clinic object
       'appointmentDateTime': Timestamp.fromDate(appointmentDateTime),
+      'serviceCategory': serviceCategory,
       'serviceType': serviceType,
       'status': 'upcoming', // Default status for a new appointment
       'additionalInfo': additionalInfo, // Optional field for additional info
@@ -194,65 +197,124 @@ class FirebaseCalls {
     print('Appointment added successfully');
   }
 
-  Future<List<Appointment>> getAppointments() async {
+  Future<void> updateAppointment({
+    required String id, // Firestore document id to update
+    String? placeId,
+    DateTime? appointmentDateTime,
+    String? serviceCategory,
+    String? serviceType,
+    String? additionalInfo,
+    String? status, // e.g., 'upcoming' | 'passed' | 'cancelled'
+  }) async {
     final user = auth.currentUser;
     if (user == null) {
       throw Exception('User not logged in');
     }
 
-    final appointmentsSnap = await appointmentsCollection
+    // Build a partial update map so you can pass only fields you want to change
+    final Map<String, dynamic> data = {
+      if (placeId != null) 'placeId': placeId,
+      if (appointmentDateTime != null)
+        'appointmentDateTime': Timestamp.fromDate(appointmentDateTime),
+      if (serviceCategory != null) 'serviceCategory': serviceCategory,
+      if (serviceType != null) 'serviceType': serviceType,
+      if (additionalInfo != null) 'additionalInfo': additionalInfo,
+      if (status != null) 'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (data.length == 1) {
+      // only updatedAt would be written → nothing meaningful to update
+      return;
+    }
+
+    await appointmentsCollection.doc(id).update(data);
+  }
+
+  Future<List<Appointment>> getAppointments() async {
+    final user = auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    // Get user appointments
+    final snap = await appointmentsCollection
         .where('userId', isEqualTo: user.uid)
         .orderBy('createdAt', descending: true)
         .get();
 
-    if (appointmentsSnap.docs.isEmpty) {
-      return [];
+    if (snap.docs.isEmpty) return [];
+
+    // Compare and update statuses in a single batch
+    final now = DateTime.now();
+    final batch = FirebaseFirestore.instance.batch();
+    int updates = 0;
+
+    for (final doc in snap.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+
+      // guard against malformed docs
+      if (!data.containsKey('appointmentDateTime') ||
+          !data.containsKey('status')) continue;
+
+      final apptTime =
+          (data['appointmentDateTime'] as Timestamp).toDate().toLocal();
+      final status = (data['status'] as String);
+
+      // Only flip 'upcoming' -> 'passed' when time has elapsed
+      if (status == 'upcoming' && apptTime.isBefore(now)) {
+        batch.update(doc.reference, {'status': 'passed'});
+        updates++;
+      }
     }
 
-    final clinicIds = appointmentsSnap.docs
-        .map((doc) => (doc.data() as Map<String, dynamic>)['placeId'] as String)
+    if (updates > 0) {
+      await batch.commit();
+    }
+
+    final clinicIds = snap.docs
+        .map((d) => (d.data() as Map<String, dynamic>)['placeId'] as String)
         .toSet()
         .toList();
 
-    if (clinicIds.isEmpty) {
-      return []; // Should not happen if appointments exist
-    }
+    if (clinicIds.isEmpty) return [];
 
     final clinicsSnap = await clinicsCollection
         .where('properties.place_id', whereIn: clinicIds)
         .get();
 
     final clinicsMap = <String, Clinic>{
-      for (var doc in clinicsSnap.docs)
-        if (doc.data() != null)
-          (doc.data() as Map<String, dynamic>)['properties']['place_id']:
-              Clinic.fromJson(doc.data() as Map<String, dynamic>)
+      for (var d in clinicsSnap.docs)
+        if (d.data() != null)
+          (d.data() as Map<String, dynamic>)['properties']['place_id']:
+              Clinic.fromJson(d.data() as Map<String, dynamic>)
     };
 
     final List<Appointment> appointments = [];
-    for (final doc in appointmentsSnap.docs) {
+    for (final doc in snap.docs) {
       final data = doc.data() as Map<String, dynamic>;
       final clinicId = data['placeId'] as String;
       final clinic = clinicsMap[clinicId];
+      if (clinic == null) continue;
 
-      if (clinic != null) {
-        final appointmentDateTime =
-            (data['appointmentDateTime'] as Timestamp).toDate();
-        final createdAt = (data['createdAt'] as Timestamp).toDate();
+      final apptTime =
+          (data['appointmentDateTime'] as Timestamp).toDate().toLocal();
+      final createdAtTs = data['createdAt'];
+      final createdAt = createdAtTs is Timestamp
+          ? createdAtTs.toDate()
+          : DateTime.fromMillisecondsSinceEpoch(0);
 
-        appointments.add(
-          Appointment(
-            id: doc.id,
-            userId: data['userId'],
-            clinic: clinic,
-            appointmentDateTime: appointmentDateTime,
-            serviceType: data['serviceType'],
-            status: data['status'],
-            createdAt: createdAt,
-            additionalInfo: data['additionalInfo'] ?? '', // Handle optional field
-          )
-        );
-      }
+      appointments.add(
+        Appointment(
+          id: doc.id,
+          userId: data['userId'],
+          clinic: clinic,
+          appointmentDateTime: apptTime,
+          serviceCategory: data['serviceCategory'],
+          serviceType: data['serviceType'],
+          status: data['status'],
+          createdAt: createdAt,
+          additionalInfo: data['additionalInfo'] ?? '',
+        ),
+      );
     }
 
     return appointments;

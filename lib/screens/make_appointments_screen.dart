@@ -9,9 +9,17 @@ import 'package:healthify/widgets/make_appointments/service_category_grid.dart';
 import 'package:healthify/widgets/make_appointments/service_list.dart';
 import 'package:healthify/widgets/make_appointments/time_slot_grid.dart';
 
+import '../models/appointment.dart';
+
 class MakeAppointmentsScreen extends StatefulWidget {
   final Clinic clinic;
-  const MakeAppointmentsScreen(this.clinic, {super.key});
+  final Appointment? appointment;
+
+  const MakeAppointmentsScreen(
+    this.clinic, {
+    super.key,
+    this.appointment,
+  });
 
   @override
   State<MakeAppointmentsScreen> createState() => _MakeAppointmentsScreenState();
@@ -23,15 +31,76 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
   DateTime? selectedDate;
   String? selectedTimeSlot;
   final _additionalInfoController = TextEditingController();
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _maybePrefillFromAppointment();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _additionalInfoController.dispose();
+    super.dispose();
+  }
+
+  void _maybePrefillFromAppointment() {
+    final appointment = widget.appointment;
+    if (appointment != null && appointment.status == 'upcoming') {
+      selectedServiceCategory = appointment.serviceCategory;
+      selectedService = appointment.serviceType;
+
+      final dateTime = appointment.appointmentDateTime;
+      selectedDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+      selectedTimeSlot = _formatTimeSlot(dateTime);
+      _additionalInfoController.text = appointment.additionalInfo;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+    }
+  }
+
+  String _twoDigits(int n) => n.toString().padLeft(2, '0');
+
+  String _formatTimeSlot(DateTime dateTime) {
+    int hour = dateTime.hour;
+    final minute = _twoDigits(dateTime.minute);
+    final am = hour < 12;
+    final hour12 = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    return "$hour12:$minute ${am ? 'AM' : 'PM'}";
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    ThemeData theme = Theme.of(context);
+    final theme = Theme.of(context);
+    final appointment = widget.appointment;
+
+    final titleText = appointment == null
+        ? 'Make an Appointment'
+        : appointment.status == 'passed'
+            ? 'Book Another Appointment'
+            : appointment.status == 'upcoming'
+                ? 'Edit Appointment'
+                : 'Make an Appointment';
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text(
-          'Make an Appointment',
+        title: Text(
+          titleText,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -42,6 +111,7 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
+            controller: _scrollController,
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,6 +180,7 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
                       setState(() {
                         selectedTimeSlot = timeSlot;
                       });
+                      _scrollToBottom();
                     },
                   ),
                   const SizedBox(height: 24),
@@ -120,8 +191,8 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
                   const SectionTitle(title: 'Additional Information'),
                   const SizedBox(height: 12),
                   AdditionalInfoCard(controller: _additionalInfoController),
-                  const SizedBox(height: 120), // Space for bottom button
                 ],
+                const SizedBox(height: 250), // Space for bottom button
               ],
             ),
           ),
@@ -130,11 +201,13 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
           if (selectedTimeSlot != null)
             BottomActionButton(
               clinic: widget.clinic,
+              selectedCategory: selectedServiceCategory,
               selectedService: selectedService,
               selectedDate: selectedDate,
               selectedTimeSlot: selectedTimeSlot,
               additionalInfoController: _additionalInfoController,
-            ),
+              appointment: widget.appointment,
+            )
         ],
       ),
     );

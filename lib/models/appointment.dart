@@ -5,6 +5,7 @@ class Appointment {
   final String userId;
   final Clinic clinic;
   final DateTime appointmentDateTime;
+  final String serviceCategory;
   final String serviceType;
   final String status;
   final DateTime createdAt;
@@ -15,6 +16,7 @@ class Appointment {
     required this.userId,
     required this.clinic,
     required this.appointmentDateTime,
+    required this.serviceCategory,
     required this.serviceType,
     required this.status,
     this.additionalInfo = '',
