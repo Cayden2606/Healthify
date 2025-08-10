@@ -33,7 +33,7 @@ class AppointmentCard extends StatelessWidget {
         border: Border.all(
           color: isUpcoming
               ? theme.colorScheme.primary.withAlpha(20)
-              : theme.colorScheme.error.withAlpha(20),
+              : theme.colorScheme.secondary.withAlpha(20),
           width: 1,
         ),
         boxShadow: [
