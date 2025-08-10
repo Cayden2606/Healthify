@@ -20,8 +20,8 @@ class ClinicMap extends StatelessWidget {
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
-        initialCenter:
-            _currentLocation ?? const LatLng(1.3793, 103.8481), // fallback to NYP
+        initialCenter: _currentLocation ??
+            const LatLng(1.3793, 103.8481), // fallback to NYP
         initialZoom: 16,
         // Enable rotation
         interactionOptions: const InteractionOptions(
@@ -29,6 +29,12 @@ class ClinicMap extends StatelessWidget {
         ),
       ),
       children: [
+        // TileLayer(
+        //   urlTemplate:
+        //       'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        //   subdomains: const ['a', 'b', 'c', 'd'],
+        //   userAgentPackageName: 'com.example.healthify',
+        // ),
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           // urlTemplate:

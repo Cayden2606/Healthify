@@ -27,7 +27,7 @@ class TimeSlotGrid extends StatelessWidget {
       itemBuilder: (context, index) {
         final timeSlot = appointmentTimeSlots[index];
         final isSelected = selectedTimeSlot == timeSlot;
-        final isAvailable = index % 4 != 0; // Mock availability
+        final isAvailable = true; // Mock availability
 
         return GestureDetector(
           onTap: isAvailable ? () => onTimeSlotSelected(timeSlot) : null,

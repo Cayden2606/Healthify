@@ -658,6 +658,25 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     );
   }
 
+  Map<String, String>? _getNextOpenDay(OpeningHours openingHours) {
+    final now = DateTime.now();
+
+    for (int i = 1; i <= 7; i++) {
+      final nextDay = now.add(Duration(days: i));
+      final hoursText = openingHours.getTodayHoursText(nextDay);
+
+      if (!hoursText.toLowerCase().contains("closed")) {
+        final weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        final dayName = weekdayNames[nextDay.weekday - 1];
+        return {
+          "day": dayName,
+          "hours": hoursText,
+        };
+      }
+    }
+    return null;
+  }
+
   // Rest of your existing methods remain the same...
   Map<String, dynamic> getClinicDisplayInfo({
     required double? currentLat,
@@ -675,13 +694,23 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     final isOpen = openingHours.isOpenNow();
 
     late String displayHours;
-    final lower = todayHoursText.toLowerCase();
     if (isOpen) {
       displayHours = "$statusText • $todayHoursText";
-    } else if (lower.contains("closed today") || lower.contains("closed")) {
-      displayHours = "Closed today";
     } else {
-      displayHours = "Closed • Opens $todayHoursText";
+      final lowerToday = todayHoursText.toLowerCase();
+
+      if (lowerToday.contains("closed today") || lowerToday == "closed") {
+        // Find next day with opening hours
+        final nextOpenInfo = _getNextOpenDay(openingHours);
+        if (nextOpenInfo != null) {
+          displayHours =
+              "Closed Today • Opens ${nextOpenInfo['day']} ${nextOpenInfo['hours']}";
+        } else {
+          displayHours = "Closed Today"; // Missing data
+        }
+      } else {
+        displayHours = "Closed • $todayHoursText";
+      }
     }
 
     String displaySpecialty = clinic.speciality;

@@ -100,7 +100,13 @@ class OpeningHours {
   static List<int> _parseDays(String daysPart) {
     List<int> days = [];
     Map<String, int> dayMap = {
-      'mo': 1, 'tu': 2, 'we': 3, 'th': 4, 'fr': 5, 'sa': 6, 'su': 7
+      'mo': 1,
+      'tu': 2,
+      'we': 3,
+      'th': 4,
+      'fr': 5,
+      'sa': 6,
+      'su': 7
     };
 
     daysPart = daysPart.toLowerCase().replaceAll(',', ' ');
@@ -152,7 +158,8 @@ class OpeningHours {
     if (isAlwaysClosed) return false;
 
     int weekday = dateTime.weekday;
-    TimeOfDay currentTime = TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
+    TimeOfDay currentTime =
+        TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
 
     List<TimeRange>? todayHours = weekdayHours[weekday];
     if (todayHours == null || todayHours.isEmpty) return false;
@@ -189,9 +196,12 @@ class OpeningHours {
 
     List<TimeRange>? todayHours = weekdayHours[dateTime.weekday];
     if (todayHours == null || todayHours.isEmpty) {
-      return "Closed today";
+      return "Closed Today";
     }
-    return todayHours.map((range) => "${_formatTime(range.start)} - ${_formatTime(range.end)}").join(", ");
+    return todayHours
+        .map((range) =>
+            "${_formatTime(range.start)} - ${_formatTime(range.end)}")
+        .join(", ");
   }
 
   String _formatTime(TimeOfDay time) {
