@@ -874,6 +874,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                             ),
                             // SizedBox(height: 4),
                             // Specialty
+                            SizedBox(width: 2),
                             Text(
                               " • ",
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -881,6 +882,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 fontSize: 10,
                               ),
                             ),
+                            SizedBox(width: 2),
                             Text(
                               specialties,
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -890,6 +892,28 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
+
+                            clinic.wheelchairAccessible
+                                ? Row(
+                                    children: [
+                                      SizedBox(width: 2),
+                                      Text(
+                                        " • ",
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                      SizedBox(width: 2),
+                                      Icon(
+                                        FontAwesomeIcons.wheelchair,
+                                        size: 12,
+                                        color: Color(0xFF0B57D0),
+                                      ),
+                                    ],
+                                  )
+                                : Container()
                           ],
                         ),
 
@@ -988,107 +1012,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                   ),
                                 ],
                               ),
-                            ),
-
-                            // Phone button (if phone exists)
-                            if (clinic.phone != null &&
-                                clinic.phone!.isNotEmpty) ...[
-                              SizedBox(width: 8),
-                              FilledButton.tonal(
-                                onPressed: () async {
-                                  final Uri phoneUri =
-                                      Uri(scheme: 'tel', path: clinic.phone);
-                                  if (await canLaunchUrl(phoneUri)) {
-                                    await launchUrl(phoneUri);
-                                  }
-                                },
-                                style: FilledButton.styleFrom(
-                                  backgroundColor:
-                                      colorScheme.secondaryContainer,
-                                  foregroundColor:
-                                      colorScheme.onSecondaryContainer,
-                                  minimumSize: Size(0, 36),
-                                  maximumSize: Size(double.infinity, 36),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 0),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                  elevation: 0,
-                                  shadowColor: Colors.transparent,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.phone,
-                                      size: 16,
-                                      color: colorScheme.onSecondaryContainer,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Call',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: colorScheme.onSecondaryContainer,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-
-                            // Website button (if website exists)
-                            if (clinic.website != null &&
-                                clinic.website!.isNotEmpty) ...[
-                              SizedBox(width: 8),
-                              FilledButton.tonal(
-                                onPressed: () async {
-                                  final Uri websiteUri =
-                                      Uri.parse(clinic.website!);
-                                  if (await canLaunchUrl(websiteUri)) {
-                                    await launchUrl(websiteUri);
-                                  }
-                                },
-                                style: FilledButton.styleFrom(
-                                  backgroundColor:
-                                      colorScheme.tertiaryContainer,
-                                  foregroundColor:
-                                      colorScheme.onTertiaryContainer,
-                                  minimumSize: Size(0, 36),
-                                  maximumSize: Size(double.infinity, 36),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 0),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                  elevation: 0,
-                                  shadowColor: Colors.transparent,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.language_outlined,
-                                      size: 16,
-                                      color: colorScheme.onTertiaryContainer,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Website',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: colorScheme.onTertiaryContainer,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-
-                            // Saved button
+                            ), // Saved button
                             SizedBox(width: 8),
                             FilledButton.tonal(
                               onPressed: () {
@@ -1143,6 +1067,150 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 ],
                               ),
                             ),
+
+                            // Phone button (if phone exists)
+                            if (clinic.phone.isNotEmpty) ...[
+                              SizedBox(width: 8),
+                              FilledButton.tonal(
+                                onPressed: () async {
+                                  final Uri phoneUri =
+                                      Uri(scheme: 'tel', path: clinic.phone);
+                                  if (await canLaunchUrl(phoneUri)) {
+                                    await launchUrl(phoneUri);
+                                  }
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor:
+                                      colorScheme.secondaryContainer,
+                                  foregroundColor:
+                                      colorScheme.onSecondaryContainer,
+                                  minimumSize: Size(0, 36),
+                                  maximumSize: Size(double.infinity, 36),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  elevation: 0,
+                                  shadowColor: Colors.transparent,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.phone,
+                                      size: 16,
+                                      color: colorScheme.onSecondaryContainer,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Call',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onSecondaryContainer,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+
+                            // Website button (if website exists)
+                            if (clinic.website.isNotEmpty) ...[
+                              SizedBox(width: 8),
+                              FilledButton.tonal(
+                                onPressed: () async {
+                                  final Uri websiteUri =
+                                      Uri.parse(clinic.website);
+                                  if (await canLaunchUrl(websiteUri)) {
+                                    await launchUrl(websiteUri);
+                                  }
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor:
+                                      colorScheme.tertiaryContainer,
+                                  foregroundColor:
+                                      colorScheme.onTertiaryContainer,
+                                  minimumSize: Size(0, 36),
+                                  maximumSize: Size(double.infinity, 36),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  elevation: 0,
+                                  shadowColor: Colors.transparent,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.language_outlined,
+                                      size: 16,
+                                      color: colorScheme.onTertiaryContainer,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Website',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onTertiaryContainer,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+
+                            // Email button (if Email exists)
+                            if (clinic.email.isNotEmpty) ...[
+                              SizedBox(width: 8),
+                              FilledButton.tonal(
+                                onPressed: () async {
+                                  final Uri emailUri = Uri(
+                                    scheme: 'mailto',
+                                    path: clinic.email,
+                                  );
+                                  if (await canLaunchUrl(emailUri)) {
+                                    await launchUrl(emailUri);
+                                  }
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: colorScheme.errorContainer,
+                                  foregroundColor: colorScheme.onErrorContainer,
+                                  minimumSize: Size(0, 36),
+                                  maximumSize: Size(double.infinity, 36),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  elevation: 0,
+                                  shadowColor: Colors.transparent,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.email_outlined,
+                                      size: 16,
+                                      color: colorScheme.onErrorContainer,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Email',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colorScheme.onErrorContainer,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                             SizedBox(width: 16),
                           ],
                         ),

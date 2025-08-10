@@ -57,8 +57,9 @@ class Clinic {
       branch: properties['branch'] ??
           properties['datasource']?['raw']?['branch'] ??
           '',
-      wheelchairAccessible: facilities['wheelchair'] == true ||
-          properties['datasource']?['raw']?['wheelchair'] == 'yes',
+      // wheelchairAccessible: facilities['wheelchair'] == true ||
+      //     properties['datasource']?['raw']?['wheelchair'] == 'yes',
+      wheelchairAccessible: facilities['wheelchair'] as bool? ?? false,
       wheelchairCondition: wheelchairDetails['condition'] ??
           properties['datasource']?['raw']?['wheelchair'] ??
           '',
