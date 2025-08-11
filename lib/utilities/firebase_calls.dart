@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:latlong2/latlong.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:healthify/models/clinic.dart';
@@ -383,4 +384,33 @@ class FirebaseCalls {
         .map((doc) => Clinic.fromJson(doc.data() as Map<String, dynamic>))
         .toList();
   }
+
+  // find nearest clinic
+  Future<Clinic?> findNearestClinic(LatLng userLocation, double Function(double, double, double, double) _calculateDistance) async {
+    final snap = await clinicsCollection.get();
+
+    if (snap.docs.isEmpty) return null;
+
+    // Find the clinic with the minimum distance
+    Clinic? nearestClinic;
+    double minDistance = double.infinity;
+
+    for (final doc in snap.docs) {
+      final clinic = Clinic.fromJson(doc.data() as Map<String, dynamic>);
+      final distance = _calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        clinic.lat,
+        clinic.lon,
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestClinic = clinic;
+      }
+    }
+
+    return nearestClinic;
+  }
+
 }

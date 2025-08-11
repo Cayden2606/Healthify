@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:healthify/models/clinic.dart';
+import 'package:healthify/models/gemini_appointment.dart';
 import 'package:healthify/utilities/status_bar_utils.dart';
 import 'package:healthify/widgets/make_appointments/additional_info_card.dart';
 import 'package:healthify/widgets/make_appointments/bottom_action_button.dart';
@@ -14,11 +15,13 @@ import '../models/appointment.dart';
 class MakeAppointmentsScreen extends StatefulWidget {
   final Clinic clinic;
   final Appointment? appointment;
+  final GeminiAppointment? gemini_appointment;
 
   const MakeAppointmentsScreen(
     this.clinic, {
     super.key,
     this.appointment,
+    this.gemini_appointment,
   });
 
   @override
@@ -56,6 +59,12 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
       selectedDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
       selectedTimeSlot = _formatTimeSlot(dateTime);
       _additionalInfoController.text = appointment.additionalInfo;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+    } else if (widget.gemini_appointment != null) {
+      selectedServiceCategory = widget.gemini_appointment!.serviceCategory;
+      selectedService = widget.gemini_appointment!.serviceType;
+      _additionalInfoController.text = widget.gemini_appointment!.additionalInfo;
 
       WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
     }
