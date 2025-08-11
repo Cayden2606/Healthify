@@ -64,7 +64,7 @@ class _ClinicSearchBarState extends State<ClinicSearchBar> {
                 color: widget.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
-            hintText: "Search clinics, services...",
+            hintText: "Search for clinics",
             hintStyle: widget.theme.textTheme.bodyMedium?.copyWith(
               color: widget.colorScheme.onSurface.withValues(alpha: 0.6),
               fontWeight: FontWeight.w400,

@@ -61,7 +61,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ClinicsScreen(
-                      searchedClinics: clinics,
+                    searchedClinics: clinics,
                   ),
                 ),
               );
@@ -75,7 +75,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
                 color: widget.colorScheme.onSurface.withAlpha(150),
               ),
             ),
-            hintText: "Search clinics, services...",
+            hintText: "Search for clinics",
             hintStyle: widget.theme.textTheme.bodyMedium?.copyWith(
               color: widget.colorScheme.onSurface.withAlpha(150),
               fontWeight: FontWeight.w400,
