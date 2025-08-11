@@ -181,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildServiceCard(
                         context: context,
                         icon: Icons.health_and_safety,
-                        title: "Health Tips",
+                        title: "Wellness",
                         color: colorScheme.secondary,
                       ),
                     ],
@@ -224,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            if (title == "Health Tips") {
+            if (title == "Wellness") {
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -252,36 +252,39 @@ class _HomeScreenState extends State<HomeScreen> {
             // Handle tap
           },
           borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 24,
-                    color: color,
-                  ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 24,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
+              ),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurface,
                 ),
-                const SizedBox(height: 10),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

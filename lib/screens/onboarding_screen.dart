@@ -191,7 +191,7 @@ class OnboardingScreen extends StatelessWidget {
             bodyWidget: Column(
               children: [
                 Text(
-                  "Discover nearby clinics on our interactive map and create your personalized health profile",
+                  "Discover nearby clinics on our interactive map and create your own health profile",
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: colorScheme.onSurface.withOpacity(0.8),
                     height: 1.5,
@@ -384,7 +384,7 @@ class OnboardingScreen extends StatelessWidget {
         ),
 
         done: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [colorScheme.primary, colorScheme.secondary],

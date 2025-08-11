@@ -78,6 +78,7 @@ class BottomActionButton extends StatelessWidget {
 
   String _emailHtml({
     required bool isEdit,
+    required bool isCancelled,
     required String clinicName,
     required String address,
     required String serviceCategory,
@@ -87,10 +88,19 @@ class BottomActionButton extends StatelessWidget {
   }) {
     final logo =
         'https://res.cloudinary.com/dv7xjn1wg/image/upload/v1754383685/zsqvtra0elbtgo4bbxhi.png';
-    final title = isEdit ? 'Appointment Updated' : 'Booking Confirmed';
-    final intro = isEdit
-        ? 'We’ve updated your appointment.'
-        : 'Your appointment is booked.';
+
+    final String title = isCancelled
+        ? 'Appointment Cancelled'
+        : (isEdit ? 'Appointment Updated' : 'Booking Confirmed');
+
+    final String intro = isCancelled
+        ? 'Your appointment has been cancelled.'
+        : (isEdit
+            ? 'We’ve updated your appointment.'
+            : 'Your appointment is booked.');
+
+    // Accent color (red for cancel, blue otherwise)
+    final String accent = isCancelled ? '#dc2626' : '#2563eb';
 
     return '''
 <!doctype html>
@@ -101,12 +111,12 @@ class BottomActionButton extends StatelessWidget {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>$title • Healthify</title>
   <style>
-    body { margin:0; padding:0; background:#f6f7f9; color:#0f172a; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial; }
+    body { margin:0; padding:0; background:#f6f7f9; color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial; }
     .container { max-width: 560px; margin: 24px auto; padding: 0 16px; }
-    .card { background:#ffffff; border-radius:16px; box-shadow:0 2px 12px rgba(15, 23, 42, 0.06); overflow:hidden; }
+    .card { background:#ffffff; border-radius:16px; box-shadow:0 2px 12px rgba(15,23,42,0.06); overflow:hidden; }
     .header { padding:24px 24px 8px; text-align:center; }
-    .logo { width:100px;  height: 100px; display:block; margin:0 auto 12px; border-radius: 12px;}
-    h1 { font-size:20px; margin:0; letter-spacing:-0.2px; }
+    .logo { width:100px; height:100px; display:block; margin:0 auto 12px; border-radius:12px; }
+    h1 { font-size:20px; margin:0; letter-spacing:-0.2px; color:$accent; }
     p.lead { margin:8px 0 0; color:#475569; }
     .divider { height:1px; background:#eef2f7; margin:16px 0; }
     .row { display:flex; gap:12px; margin:0 0 8px; }
@@ -114,7 +124,7 @@ class BottomActionButton extends StatelessWidget {
     .val { flex:1; color:#0f172a; }
     .notes { background:#f8fafc; border:1px solid #e5e7eb; padding:12px; border-radius:12px; color:#334155; }
     .footer { text-align:center; color:#64748b; font-size:12px; padding:16px 12px 24px; }
-    a.btn { display:inline-block; background:#2563eb; color:#fff!important; text-decoration:none; padding:10px 14px; border-radius:10px; margin-top:8px;}
+    a.btn { display:inline-block; background:$accent; color:#fff!important; text-decoration:none; padding:10px 14px; border-radius:10px; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -136,7 +146,6 @@ class BottomActionButton extends StatelessWidget {
         <div class="row"><div class="key">When</div><div class="val">$whenText</div></div>
 
         ${notes.isEmpty ? '' : '<div class="divider"></div><div class="notes">${_escapeHtml(notes)}</div>'}
-
       </div>
 
       <div class="footer">
@@ -428,10 +437,35 @@ class BottomActionButton extends StatelessWidget {
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true) return; // remove the duplicated check
 
     try {
       await FirebaseCalls().deleteAppointment(appointment!.id);
+
+      final toEmail = appUser.email;
+      if (toEmail.isNotEmpty) {
+        final whenText =
+            _formatAppointmentDateTimeLocal(appointment!.appointmentDateTime);
+
+        final html = _emailHtml(
+          isEdit: false,
+          isCancelled: true, // <-- key change
+          clinicName: appointment!.clinic.name,
+          address: appointment!.clinic.address,
+          serviceCategory: appointment!.serviceCategory,
+          serviceType: appointment!.serviceType,
+          whenText: whenText,
+          notes: appointment!.additionalInfo ?? '',
+        );
+
+        await _resend.sendEmail(
+          from: 'noreply@healthifyapp.me',
+          to: [toEmail],
+          subject: 'Your appointment was cancelled',
+          html: html,
+        );
+      }
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const home_screen.HomeScreen()),
@@ -456,6 +490,7 @@ class BottomActionButton extends StatelessWidget {
 
       final html = _emailHtml(
         isEdit: isEdit,
+        isCancelled: false,
         clinicName: clinicName,
         address: address,
         serviceCategory: selectedCategory ?? '',
