@@ -16,8 +16,7 @@ class ServiceList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final categoryServices =
-        appointmentServices[selectedServiceCategory] ?? [];
+    final categoryServices = appointmentServices[selectedServiceCategory] ?? [];
 
     return Column(
       children: categoryServices.map((service) {
@@ -31,12 +30,12 @@ class ServiceList extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? theme.colorScheme.primaryContainer.withOpacity(0.4)
+                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
                     : theme.colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
-                      ? theme.colorScheme.primary.withOpacity(0.3)
+                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
                       : Colors.transparent,
                   width: 1,
                 ),

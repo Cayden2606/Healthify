@@ -34,7 +34,7 @@ class TimeSlotGrid extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: !isAvailable
-                  ? theme.colorScheme.surfaceVariant.withOpacity(0.3)
+                  ? theme.colorScheme.surfaceVariant.withValues(alpha: 0.3)
                   : isSelected
                       ? theme.colorScheme.primary
                       : theme.colorScheme.surfaceContainer,
@@ -42,7 +42,7 @@ class TimeSlotGrid extends StatelessWidget {
               border: Border.all(
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.outline.withOpacity(0.12),
+                    : theme.colorScheme.outline.withValues(alpha: 0.12),
                 width: 1,
               ),
             ),
@@ -52,7 +52,8 @@ class TimeSlotGrid extends StatelessWidget {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: !isAvailable
-                      ? theme.colorScheme.onSurfaceVariant.withOpacity(0.5)
+                      ? theme.colorScheme.onSurfaceVariant
+                          .withValues(alpha: 0.5)
                       : isSelected
                           ? theme.colorScheme.onPrimary
                           : theme.colorScheme.onSurface,

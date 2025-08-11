@@ -71,8 +71,8 @@ class ClinicMap extends StatelessWidget {
                 point: _currentLocation,
                 radius: 50, // meters
                 useRadiusInMeter: true,
-                color: Colors.blue.withOpacity(0.1),
-                borderColor: Colors.blue.withOpacity(0.3),
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderColor: Colors.blue.withValues(alpha: 0.3),
                 borderStrokeWidth: 1,
               ),
             ],
