@@ -369,4 +369,18 @@ class FirebaseCalls {
       appUser.colorSeed = colorSeed;
     }
   }
+
+  // firebase call to search through clinics collection, and for every clinic that contains the user input, we return the matching clinics
+  Future<List<Clinic>> searchClinics(String query) async {
+    if (query.trim().isEmpty) return [];
+
+    final snap = await clinicsCollection
+        .where('properties.name', isGreaterThanOrEqualTo: query)
+        .where('properties.name', isLessThanOrEqualTo: query + '\uf8ff')
+        .get();
+
+    return snap.docs
+        .map((doc) => Clinic.fromJson(doc.data() as Map<String, dynamic>))
+        .toList();
+  }
 }

@@ -21,8 +21,9 @@ import 'package:healthify/utilities/firebase_calls.dart';
 class ClinicsScreen extends StatefulWidget {
   // Make the clinic parameter optional
   final Clinic? passedClinic;
+  final List<Clinic>? searchedClinics;
 
-  const ClinicsScreen({Key? key, this.passedClinic}) : super(key: key);
+  const ClinicsScreen({Key? key, this.passedClinic, this.searchedClinics}) : super(key: key);
 
   @override
   State<ClinicsScreen> createState() => _ClinicsScreenState();
@@ -98,6 +99,12 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
               LatLng(widget.passedClinic!.lat, widget.passedClinic!.lon), 16);
         }
       });
+    } else if (widget.searchedClinics != null) {
+      selectedButtonIndex = 5;
+      _selectedSearch = 'Search Results';
+      _clinicsFuture = Future.value(widget.searchedClinics);
+      _markersFuture =
+          _clinicsFuture.then((clinics) => _generateMarkers(clinics));
     } else {
       _clinicsFuture = _getInitialNearbyClinics();
       _markersFuture =
@@ -240,6 +247,13 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
       // Move map to the passed clinic location
       _mapController.move(
           LatLng(widget.passedClinic!.lat, widget.passedClinic!.lon), 17.0);
+    }
+    else if (selectedButtonIndex == 5 && widget.searchedClinics != null) {
+      setState(() {
+        _clinicsFuture = Future.value(widget.searchedClinics);
+        _markersFuture =
+            _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+      });
     }
   }
 
@@ -445,7 +459,23 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                   ClinicSearchBar(
                       isDarkMode: isDarkMode,
                       colorScheme: colorScheme,
-                      theme: theme),
+                      theme: theme,
+                      onChanged: (query) async {
+                        if (query.trim().isEmpty) {
+                          // Optionally, reset to default clinics if search is cleared
+                          setState(() {
+                            _clinicsFuture = _getInitialNearbyClinics();
+                            _markersFuture = _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+                          });
+                          return;
+                        }
+                        setState(() {
+                          _clinicsFuture = FirebaseCalls().searchClinics(query);
+                          _markersFuture = _clinicsFuture.then((clinics) => _generateMarkers(clinics));
+                          selectedButtonIndex = 5; // Optional: mark as search results
+                          _selectedSearch = 'Search Results';
+                        });
+                      }),
                   SizedBox(height: 16),
                   // Only show navigation buttons if no clinic was passed
                   Row(
@@ -524,7 +554,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                       BoxShadow(
                         color: Theme.of(context)
                             .shadowColor
-                            .withOpacity(0.2), // Use withOpacity
+                            .withValues(alpha: 0.2), // Use withOpacity
                         blurRadius: 12,
                         spreadRadius: 2,
                         offset: const Offset(0, -2),
@@ -546,7 +576,7 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .secondary
-                                .withOpacity(0.6),
+                                .withValues(alpha: 0.6),
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
@@ -677,7 +707,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     return null;
   }
 
-  // Rest of your existing methods remain the same...
   Map<String, dynamic> getClinicDisplayInfo({
     required double? currentLat,
     required double? currentLon,
@@ -793,12 +822,10 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
     return GestureDetector(
       onTap: () {
         _mapController.move(LatLng(clinic.lat, clinic.lon), 17.0);
-
-        // Reorder list: move this clinic to the top
         setState(() {
           final clickedIndex = _loadedClinics.indexWhere((c) =>
               c.lat == clinic.lat &&
-              c.lon == clinic.lon); // match by coordinates
+              c.lon == clinic.lon);
           if (clickedIndex != -1) {
             final clickedClinic = _loadedClinics.removeAt(clickedIndex);
             _loadedClinics.insert(0, clickedClinic);
@@ -819,16 +846,15 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 16),
-        // padding: EdgeInsets.fromLTRB(0, 16, 0, 16),
         decoration: BoxDecoration(
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: colorScheme.outline.withOpacity(0.2),
+            color: colorScheme.outline.withValues(alpha: 0.2),
           ),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow.withOpacity(isDark ? 0.3 : 0.1),
+              color: colorScheme.shadow.withValues(alpha: isDark ? 0.3 : 0.1),
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -872,8 +898,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                                 fontSize: 13,
                               ),
                             ),
-                            // SizedBox(height: 4),
-                            // Specialty
                             SizedBox(width: 2),
                             Text(
                               " • ",
@@ -892,7 +916,6 @@ class _ClinicsScreenState extends State<ClinicsScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-
                             clinic.wheelchairAccessible
                                 ? Row(
                                     children: [

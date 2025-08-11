@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../screens/clinics_screen.dart';
+import 'package:healthify/screens/clinics_screen.dart';
+import 'package:healthify/utilities/firebase_calls.dart';
 
 class HomeSearchBar extends StatefulWidget {
   const HomeSearchBar({
@@ -53,14 +54,15 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
           controller: _controller,
           focusNode: _focusNode,
           textInputAction: TextInputAction.done,
-          onSubmitted: (value) {
+          onSubmitted: (value) async {
             if (value.trim().isNotEmpty) {
+              final clinics = await FirebaseCalls().searchClinics(value.trim());
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ClinicsScreen(
-                      // searchQuery: value.trim(), // pass the search text
-                      ),
+                      searchedClinics: clinics,
+                  ),
                 ),
               );
             }
