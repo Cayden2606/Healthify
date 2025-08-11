@@ -84,7 +84,7 @@ class _CitiesSelectionDialogState extends State<CitiesSelectionDialog>
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.shadow.withOpacity(0.15),
+                      color: colorScheme.shadow.withValues(alpha: 0.15),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
@@ -161,7 +161,7 @@ class _CitiesSelectionDialogState extends State<CitiesSelectionDialog>
                                     color: isSelected
                                         ? colorScheme.primaryContainer
                                         : colorScheme.surfaceContainerHighest
-                                            .withOpacity(0.3),
+                                            .withValues(alpha: 0.3),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
                                       color: isSelected

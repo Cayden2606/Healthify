@@ -304,7 +304,7 @@ class _HealthAssistantState extends State<HealthAssistant> {
 
                           // Blockquote
                           blockquote: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.7),
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                             fontStyle: FontStyle.italic,
                             height: 1.2,
                           ),

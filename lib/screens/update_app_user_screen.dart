@@ -266,7 +266,7 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
                               keyboardType: TextInputType.emailAddress,
                               autofillHints: const [AutofillHints.email],
                               decoration: InputDecoration(
-                                labelText: 'Email *',
+                                labelText: 'Inbox Email *',
                                 labelStyle: theme.textTheme.bodyMedium,
                                 border: const OutlineInputBorder(
                                   borderRadius:

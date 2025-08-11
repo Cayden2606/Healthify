@@ -9,6 +9,43 @@ import 'package:resend/resend.dart';
 
 import '../../models/appointment.dart';
 
+enum EmailKind { booked, updated, cancelled }
+
+class _EmailCopy {
+  final String subject;
+  final String title;
+  final String intro;
+  final String accentHex;
+  const _EmailCopy(this.subject, this.title, this.intro, this.accentHex);
+}
+
+_EmailCopy _copyFor(EmailKind kind) {
+  switch (kind) {
+    case EmailKind.cancelled:
+      return const _EmailCopy(
+        'Your appointment was cancelled',
+        'Appointment Cancelled',
+        'Your appointment has been cancelled.',
+        '#dc2626',
+      );
+    case EmailKind.updated:
+      return const _EmailCopy(
+        'Your appointment was updated',
+        'Appointment Updated',
+        'We’ve updated your appointment.',
+        '#2563eb',
+      );
+    case EmailKind.booked:
+    default:
+      return const _EmailCopy(
+        'Your appointment is booked',
+        'Booking Confirmed',
+        'Your appointment is booked.',
+        '#2563eb',
+      );
+  }
+}
+
 class BottomActionButton extends StatelessWidget {
   final Clinic clinic;
   final String? selectedCategory;
@@ -35,8 +72,7 @@ class BottomActionButton extends StatelessWidget {
     if (apiKey == null || apiKey.isEmpty) {
       throw Exception('RESEND_API_KEY is not set in .env');
     }
-    Resend(apiKey: apiKey);
-    return Resend.instance;
+    return Resend(apiKey: apiKey);
   }
 
   DateTime combineDateAndTime(DateTime date, String timeString) {
@@ -77,7 +113,7 @@ class BottomActionButton extends StatelessWidget {
   }
 
   String _emailHtml({
-    required bool isEdit,
+    required EmailKind kind,
     required String clinicName,
     required String address,
     required String serviceCategory,
@@ -87,10 +123,8 @@ class BottomActionButton extends StatelessWidget {
   }) {
     final logo =
         'https://res.cloudinary.com/dv7xjn1wg/image/upload/v1754383685/zsqvtra0elbtgo4bbxhi.png';
-    final title = isEdit ? 'Appointment Updated' : 'Booking Confirmed';
-    final intro = isEdit
-        ? 'We’ve updated your appointment.'
-        : 'Your appointment is booked.';
+
+    final copy = _copyFor(kind);
 
     return '''
 <!doctype html>
@@ -99,14 +133,14 @@ class BottomActionButton extends StatelessWidget {
   <meta charset="utf-8">
   <meta name="x-apple-disable-message-reformatting">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>$title • Healthify</title>
+  <title>${copy.title} • Healthify</title>
   <style>
-    body { margin:0; padding:0; background:#f6f7f9; color:#0f172a; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial; }
+    body { margin:0; padding:0; background:#f6f7f9; color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial; }
     .container { max-width: 560px; margin: 24px auto; padding: 0 16px; }
     .card { background:#ffffff; border-radius:16px; box-shadow:0 2px 12px rgba(15, 23, 42, 0.06); overflow:hidden; }
     .header { padding:24px 24px 8px; text-align:center; }
-    .logo { width:100px;  height: 100px; display:block; margin:0 auto 12px; border-radius: 12px;}
-    h1 { font-size:20px; margin:0; letter-spacing:-0.2px; }
+    .logo { width:100px; height:100px; display:block; margin:0 auto 12px; border-radius:12px; }
+    h1 { font-size:20px; margin:0; letter-spacing:-0.2px; color:${copy.accentHex}; }
     p.lead { margin:8px 0 0; color:#475569; }
     .divider { height:1px; background:#eef2f7; margin:16px 0; }
     .row { display:flex; gap:12px; margin:0 0 8px; }
@@ -114,7 +148,7 @@ class BottomActionButton extends StatelessWidget {
     .val { flex:1; color:#0f172a; }
     .notes { background:#f8fafc; border:1px solid #e5e7eb; padding:12px; border-radius:12px; color:#334155; }
     .footer { text-align:center; color:#64748b; font-size:12px; padding:16px 12px 24px; }
-    a.btn { display:inline-block; background:#2563eb; color:#fff!important; text-decoration:none; padding:10px 14px; border-radius:10px; margin-top:8px;}
+    a.btn { display:inline-block; background:${copy.accentHex}; color:#fff!important; text-decoration:none; padding:10px 14px; border-radius:10px; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -122,8 +156,8 @@ class BottomActionButton extends StatelessWidget {
     <div class="card">
       <div class="header">
         <img class="logo" src="$logo" alt="Healthify logo" />
-        <h1>$title</h1>
-        <p class="lead">$intro</p>
+        <h1>${copy.title}</h1>
+        <p class="lead">${copy.intro}</p>
       </div>
 
       <div class="content" style="padding:0 24px 16px;">
@@ -136,7 +170,6 @@ class BottomActionButton extends StatelessWidget {
         <div class="row"><div class="key">When</div><div class="val">$whenText</div></div>
 
         ${notes.isEmpty ? '' : '<div class="divider"></div><div class="notes">${_escapeHtml(notes)}</div>'}
-
       </div>
 
       <div class="footer">
@@ -154,18 +187,17 @@ class BottomActionButton extends StatelessWidget {
       .replaceAll('<', '&lt;')
       .replaceAll('>', '&gt;');
 
-  Future<bool> _sendBookingEmail({
+  Future<bool> _sendEmail({
     required String to,
-    required bool isEdit,
+    required EmailKind kind,
     required String html,
   }) async {
+    final subject = _copyFor(kind).subject;
     try {
       await _resend.sendEmail(
         from: 'noreply@healthifyapp.me',
         to: [to],
-        subject: isEdit
-            ? 'Your appointment was updated'
-            : 'Your appointment is booked',
+        subject: subject,
         html: html,
       );
       return true;
@@ -225,8 +257,8 @@ class BottomActionButton extends StatelessWidget {
           children: [
             Container(
               decoration: BoxDecoration(
-                color:
-                    (iconColor ?? theme.colorScheme.primary).withOpacity(0.12),
+                color: (iconColor ?? theme.colorScheme.primary)
+                    .withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               padding: const EdgeInsets.all(8),
@@ -296,14 +328,14 @@ class BottomActionButton extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainer.withOpacity(0.85),
+              color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.85),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(28),
                 topRight: Radius.circular(28),
               ),
               border: Border(
                 top: BorderSide(
-                  color: theme.colorScheme.outline.withOpacity(0.1),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
                   width: 0.5,
                 ),
               ),
@@ -317,7 +349,7 @@ class BottomActionButton extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withOpacity(0.6),
+                      color: theme.colorScheme.surface.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -428,10 +460,33 @@ class BottomActionButton extends StatelessWidget {
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true) return; // remove the duplicated check
 
     try {
       await FirebaseCalls().deleteAppointment(appointment!.id);
+
+      final toEmail = appUser.email;
+      if (toEmail.isNotEmpty) {
+        final whenText =
+            _formatAppointmentDateTimeLocal(appointment!.appointmentDateTime);
+
+        final html = _emailHtml(
+          kind: EmailKind.cancelled,
+          clinicName: appointment!.clinic.name,
+          address: appointment!.clinic.address,
+          serviceCategory: appointment!.serviceCategory,
+          serviceType: appointment!.serviceType,
+          whenText: whenText,
+          notes: appointment!.additionalInfo ?? '',
+        );
+
+        await _sendEmail(
+          to: toEmail,
+          kind: EmailKind.cancelled,
+          html: html,
+        );
+      }
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const home_screen.HomeScreen()),
@@ -454,8 +509,10 @@ class BottomActionButton extends StatelessWidget {
       final clinicName = clinic.name;
       final address = clinic.address;
 
+      final kind = isEdit ? EmailKind.updated : EmailKind.booked;
+
       final html = _emailHtml(
-        isEdit: isEdit,
+        kind: kind,
         clinicName: clinicName,
         address: address,
         serviceCategory: selectedCategory ?? '',
@@ -475,7 +532,7 @@ class BottomActionButton extends StatelessWidget {
           status: 'upcoming',
         );
         if (toEmail.isNotEmpty) {
-          _sendBookingEmail(to: toEmail, isEdit: true, html: html);
+          await _sendEmail(to: toEmail, kind: kind, html: html);
         }
         _showUpdateConfirmation(context, theme);
       } else {
@@ -487,7 +544,7 @@ class BottomActionButton extends StatelessWidget {
           serviceCategory: selectedCategory!,
         );
         if (toEmail.isNotEmpty) {
-          _sendBookingEmail(to: toEmail, isEdit: false, html: html);
+          await _sendEmail(to: toEmail, kind: kind, html: html);
         }
         _showBookingConfirmation(context, theme,
             whenText: whenText, clinicName: clinicName);

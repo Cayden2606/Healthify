@@ -50,7 +50,7 @@ class AdditionalInfoCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondaryContainer.withOpacity(0.3),
+            color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(

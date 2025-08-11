@@ -31,7 +31,7 @@ class OnboardingScreen extends StatelessWidget {
                 Text(
                   "Your all-in-one health companion for Singapore",
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.8),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
@@ -91,7 +91,7 @@ class OnboardingScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(90),
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.primary.withOpacity(0.3),
+                        color: colorScheme.primary.withValues(alpha: 0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -117,7 +117,7 @@ class OnboardingScreen extends StatelessWidget {
                 Text(
                   "Get instant health advice and book appointments with clinics across Singapore",
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.8),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
@@ -170,7 +170,7 @@ class OnboardingScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(90),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.secondary.withOpacity(0.3),
+                      color: colorScheme.secondary.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -191,9 +191,9 @@ class OnboardingScreen extends StatelessWidget {
             bodyWidget: Column(
               children: [
                 Text(
-                  "Discover nearby clinics on our interactive map and create your personalized health profile",
+                  "Discover nearby clinics on our interactive map and create your own health profile",
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.8),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
@@ -246,7 +246,7 @@ class OnboardingScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(90),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.tertiary.withOpacity(0.3),
+                      color: colorScheme.tertiary.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -269,7 +269,7 @@ class OnboardingScreen extends StatelessWidget {
                 Text(
                   "Join many users improving their health with Healthify",
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.8),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
@@ -281,13 +281,13 @@ class OnboardingScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        colorScheme.primary.withOpacity(0.1),
-                        colorScheme.secondary.withOpacity(0.1),
+                        colorScheme.primary.withValues(alpha: 0.1),
+                        colorScheme.secondary.withValues(alpha: 0.1),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: colorScheme.outline.withOpacity(0.5),
+                      color: colorScheme.outline.withValues(alpha: 0.5),
                     ),
                   ),
                   child: Column(
@@ -338,7 +338,7 @@ class OnboardingScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(90),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.4),
+                      color: colorScheme.primary.withValues(alpha: 0.4),
                       blurRadius: 25,
                       offset: const Offset(0, 15),
                     ),
@@ -384,7 +384,7 @@ class OnboardingScreen extends StatelessWidget {
         ),
 
         done: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [colorScheme.primary, colorScheme.secondary],
@@ -392,7 +392,7 @@ class OnboardingScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                color: colorScheme.primary.withOpacity(0.3),
+                color: colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -413,7 +413,7 @@ class OnboardingScreen extends StatelessWidget {
           size: const Size.square(10.0),
           activeSize: const Size(20.0, 10.0),
           activeColor: colorScheme.primary,
-          color: colorScheme.outline.withOpacity(0.5),
+          color: colorScheme.outline.withValues(alpha: 0.5),
           spacing: const EdgeInsets.symmetric(horizontal: 3.0),
           activeShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(25.0),

@@ -34,19 +34,20 @@ class ServiceCategoryGrid extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isSelected
-                  ? theme.colorScheme.secondaryContainer.withOpacity(0.8)
+                  ? theme.colorScheme.secondaryContainer.withValues(alpha: 0.8)
                   : theme.colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected
-                    ? theme.colorScheme.secondary.withOpacity(0.3)
-                    : theme.colorScheme.outline.withOpacity(0.12),
+                    ? theme.colorScheme.secondary.withValues(alpha: 0.3)
+                    : theme.colorScheme.outline.withValues(alpha: 0.12),
                 width: isSelected ? 2 : 1,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: theme.colorScheme.secondary.withOpacity(0.1),
+                        color:
+                            theme.colorScheme.secondary.withValues(alpha: 0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),

@@ -140,13 +140,16 @@ class _UpcomingScheduleCardState extends State<UpcomingScheduleCard> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     buildBar(
-                        colorScheme.onSurfaceVariant.withOpacity(.15), 140),
+                        colorScheme.onSurfaceVariant.withValues(alpha: .15),
+                        140),
                     const SizedBox(height: 8),
                     buildBar(
-                        colorScheme.onSurfaceVariant.withOpacity(.12), 100),
+                        colorScheme.onSurfaceVariant.withValues(alpha: .12),
+                        100),
                     const SizedBox(height: 8),
                     buildBar(
-                        colorScheme.onSurfaceVariant.withOpacity(.10), 180),
+                        colorScheme.onSurfaceVariant.withValues(alpha: .10),
+                        180),
                   ],
                 ),
               ),
