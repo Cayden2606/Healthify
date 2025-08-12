@@ -375,14 +375,18 @@ class FirebaseCalls {
   Future<List<Clinic>> searchClinics(String query) async {
     if (query.trim().isEmpty) return [];
 
-    final snap = await clinicsCollection
-        .where('properties.name', isGreaterThanOrEqualTo: query)
-        .where('properties.name', isLessThanOrEqualTo: query + '\uf8ff')
-        .get();
+    final lowerQuery = query.toLowerCase();
 
-    return snap.docs
-        .map((doc) => Clinic.fromJson(doc.data() as Map<String, dynamic>))
-        .toList();
+    final snap = await clinicsCollection.get();
+
+    // Filter clinics whose name contains the query (case-insensitive)
+    final results = snap.docs.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final name = (data['properties']?['name'] ?? '').toString().toLowerCase();
+      return name.contains(lowerQuery);
+    }).map((doc) => Clinic.fromJson(doc.data() as Map<String, dynamic>)).toList();
+
+    return results;
   }
 
   // find nearest clinic
