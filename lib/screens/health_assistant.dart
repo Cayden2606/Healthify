@@ -7,7 +7,6 @@ import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:healthify/models/appointment.dart';
 import 'package:healthify/models/clinic.dart';
 import 'package:healthify/models/gemini_appointment.dart';
 import 'package:healthify/screens/make_appointments_screen.dart';
@@ -15,8 +14,6 @@ import 'package:healthify/widgets/bottom_navigation_bar.dart';
 import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-
-import 'package:healthify/screens/clinics_screen.dart';
 
 import 'package:healthify/utilities/status_bar_utils.dart';
 import 'package:latlong2/latlong.dart';
@@ -86,6 +83,8 @@ class _HealthAssistantState extends State<HealthAssistant> {
 
   bool showBookButton = false;
   GeminiAppointment? geminiAppointment;
+
+  bool userBookAppointmentIntent = false; // Add this to your state
 
   @override
   void initState() {
@@ -405,30 +404,57 @@ class _HealthAssistantState extends State<HealthAssistant> {
             ),
           ),
         ),
-        if (showBookButton && geminiAppointment != null)
+        if (userBookAppointmentIntent && geminiAppointment != null)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.medical_services),
-                label: const Text("Book Appointment"),
-                onPressed: () {
-                  print(geminiAppointment?.clinic);
-                  print(geminiAppointment?.serviceCategory);
-                  print(geminiAppointment?.serviceType);
-                  print(geminiAppointment?.additionalInfo);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MakeAppointmentsScreen(
-                        geminiAppointment!.clinic,
-                        gemini_appointment: geminiAppointment,
-                      ),
+            padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 24.0),
+            child: Column(
+              children: [
+                // New Conversation Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: const Text("New Conversation"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      foregroundColor: Theme.of(context).colorScheme.onSecondary,
                     ),
-                  );
-                },
-              ),
+                    onPressed: () {
+                      setState(() {
+                        messages.clear();
+                        geminiAppointment = null;
+                        userBookAppointmentIntent = false;
+                        showBookButton = false;
+                        initGreetings = true;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Book Appointment Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.medical_services),
+                    label: const Text("Book Appointment"),
+                    onPressed: () {
+                      print(geminiAppointment?.clinic);
+                      print(geminiAppointment?.serviceCategory);
+                      print(geminiAppointment?.serviceType);
+                      print(geminiAppointment?.additionalInfo);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MakeAppointmentsScreen(
+                            geminiAppointment!.clinic,
+                            gemini_appointment: geminiAppointment,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
       ],
@@ -532,66 +558,55 @@ class _HealthAssistantState extends State<HealthAssistant> {
     try {
       String output;
 
-      String enhancedPrompt = chatMessage.text;
-      if (chatMessage.medias?.isEmpty ?? true) {
-        enhancedPrompt = """
+      // --- Start: Build Conversational History ---
+
+      // 1. The System Prompt
+      final systemPrompt = """
 # systemprompt
-You are a helpful health assistant. Please provide a comprehensive response using markdown formatting where appropriate. 
-You should always aim to choose the most appropriate category and service type for the user's needs.
+You are a helpful health assistant. Your goal is to understand the user's health needs and guide them towards booking an appropriate appointment.
+You will be given the recent chat history, the latest user message, and a JSON summary of the appointment details collected so far.
+Your main task is to provide a helpful, conversational response.
+You should format the response using markdown for better readability when appropriate.
+Avoid lengthy paragraphs and sentences.
 
-After your answer, provide a JSON summary with:
+Then, you MUST append a **complete and updated** JSON summary of the appointment details to the end of your response. The summary must be in a ```json ... ``` block and follow this exact format:
 {
-  "serviceCategory": "",
-  "serviceType": "",
-  "additionalInfo": "insert symptoms etc."
+  "serviceCategory": "...",
+  "serviceType": "...",
+  "additionalInfo": "...",
+  "userBookAppointmentIntent": true // or false
 }
 
-# the only possible service category (keys) and types (list items) (no other options)
-{
-  'Doctor Consultation': [
-    'General Consultation',
-    'Chronic Conditions Follow-up',
-    'Family Planning Consultation',
-    'Specialist Referral Review',
-  ],
-  'Vaccination': [
-    'Adult Vaccination',
-    'Child Vaccination (6 months - 17 years)',
-    'COVID-19 Vaccination',
-    'Flu Vaccination',
-    'Travel Vaccination',
-  ],
-  'Screening & Tests': [
-    'Cervical Cancer Screening',
-    'Diabetic Eye Screening',
-    'Mammogram Screening',
-    'Blood Pressure Check',
-    'Cholesterol Test',
-  ],
-  'Nursing Services': [
-    'Wound Dressing',
-    'Injection Administration',
-    'Health Education',
-    'Postnatal Care',
-  ],
-  'Allied Health': [
-    'Nutritionist Consultation',
-    'Physiotherapy',
-    'Medical Social Service',
-    'Financial Counselling',
-  ],
-  'Dental': [
-    'Dental Cleaning',
-    'Dental Check-up',
-    'Fluoride Treatment',
-    'Dental X-Ray',
-  ],
-}
+- If a detail is not yet known, use "Not specified".
+- The field "userBookAppointmentIntent" must be a boolean and should be true only if the user's intent is to book an appointment, otherwise false.
 
-# userprompt
-${chatMessage.text}
+# The only possible service categories (keys) and service types (list items) are:
+${json.encode(allowedCategories)}
 """;
+
+      // 2. The recent conversation history (e.g., last 6 messages)
+      final recentMessages = messages.skip(1).toList().reversed.take(6);
+      String historyForPrompt = "# recent conversation history\n";
+      if (recentMessages.isNotEmpty) {
+        historyForPrompt += recentMessages.map((m) {
+          final author = m.user.id == currentUser.id ? "User" : "Assistant";
+          return "$author: ${m.text}";
+        }).join('\n');
+      } else {
+        historyForPrompt += "No history yet.";
       }
+
+      // 3. The latest user prompt
+      final userPrompt = "# userprompt\n${chatMessage.text}";
+
+      // Combine all parts into the final prompt for the model
+      final enhancedPrompt = [
+        systemPrompt,
+        historyForPrompt,
+        userPrompt
+      ].join('\n\n');
+
+      // --- End: Build Conversational History ---
 
       if (chatMessage.medias?.isNotEmpty ?? false) {
         final bytes = File(chatMessage.medias!.first.url).readAsBytesSync();
@@ -618,6 +633,13 @@ ${chatMessage.text}
 
       stopTypingAnimation();
 
+      // --- DEBUGGING START ---
+      print("--- Enhanced Prompt ---");
+      print(enhancedPrompt);
+
+      print("--- Gemini Raw Output ---");
+      print(output);
+
       setState(() {
         messages[0] = ChatMessage(
           user: geminiUser,
@@ -626,28 +648,27 @@ ${chatMessage.text}
         );
       });
 
-      final summary = extractSummaryJson(output);
-      bool validSummary = false;
-      if (summary != null && isValidGeminiSummary(summary)) {
-        validSummary = true;
-        final userLocation = await _getCurrentLocation();
-        if (userLocation != null) {
-          final Clinic? nearestClinic = await FirebaseCalls().findNearestClinic(
-            LatLng(userLocation.$1, userLocation.$2),
-            _calculateDistance,
-          );
-          if (nearestClinic != null) {
-            geminiAppointment = GeminiAppointment(
-              clinic: nearestClinic,
-              serviceCategory: summary['serviceCategory'] ?? summary['service_category'] ?? '',
-              serviceType: summary['serviceType'] ?? summary['service_type'] ?? '',
-              additionalInfo: summary['additionalInfo'] ?? summary['additional_info'] ?? '',
-            );
-          }
-        }
+      // Extract and update the conversation JSON for the next turn
+      final newJsonText = extractJsonBlock(output);
+
+      print("--- Extracted JSON Block ---");
+      print(newJsonText);
+
+      if (newJsonText != null) {
+        setState(() {
+          _parseJsonToAppointment(newJsonText);
+        });
       }
 
-      if (messages.where((m) => m.user.id == currentUser.id).length > 1 && geminiAppointment != null && validSummary) {
+      bool validAppointment = geminiAppointment != null &&
+          geminiAppointment!.serviceCategory.isNotEmpty &&
+          geminiAppointment!.serviceType.isNotEmpty &&
+          allowedCategories.containsKey(geminiAppointment!.serviceCategory) &&
+          allowedCategories[geminiAppointment!.serviceCategory]!
+              .contains(geminiAppointment!.serviceType);
+
+      // Show button if we have a valid appointment with a clinic
+      if (validAppointment && geminiAppointment?.clinic != null) {
         setState(() {
           showBookButton = true;
         });
@@ -687,32 +708,47 @@ ${chatMessage.text}
     }
   }
 
-  @override
-  void dispose() {
-    typingTimer?.cancel();
-    super.dispose();
+  String? extractJsonBlock(String text) {
+    final regex = RegExp(r'```json\s*([\s\S]*?)```', multiLine: true);
+    final match = regex.firstMatch(text);
+    return match?.group(1)?.trim();
   }
-}
 
-Map<String, dynamic>? extractSummaryJson(String text) {
-  final regex = RegExp(r'```json\s*([\s\S]*?)```', multiLine: true);
-  final match = regex.firstMatch(text);
-  if (match != null) {
+  String removeJsonBlock(String text) {
+    return text.replaceAll(RegExp(r'```json[\s\S]*?```', multiLine: true), '').trim();
+  }
+
+  void _parseJsonToAppointment(String jsonText) {
     try {
-      return json.decode(match.group(1)!);
-    } catch (_) {}
+      final Map<String, dynamic> data = json.decode(jsonText);
+
+      // Parse the intent
+      userBookAppointmentIntent = data['userBookAppointmentIntent'] == true;
+
+      () async {
+        Clinic? clinic;
+        final userLocation = await _getCurrentLocation();
+        if (userLocation != null) {
+          clinic = await FirebaseCalls().findNearestClinic(
+            LatLng(userLocation.$1, userLocation.$2),
+            _calculateDistance,
+          );
+        }
+        setState(() {
+          geminiAppointment = GeminiAppointment(
+            clinic: clinic!,
+            serviceCategory: (data['serviceCategory'] ?? '').toString() == 'Not specified' ? '' : data['serviceCategory'],
+            serviceType: (data['serviceType'] ?? '').toString() == 'Not specified' ? '' : data['serviceType'],
+            additionalInfo: (data['additionalInfo'] ?? '').toString() == 'Not specified' ? '' : data['additionalInfo'],
+          );
+        });
+        print("--- Parsed Appointment JSON ---");
+        print(data);
+        print("--- User Book Appointment Intent ---");
+        print(userBookAppointmentIntent);
+      }();
+    } catch (e) {
+      print("Error parsing appointment JSON: $e");
+    }
   }
-  return null;
-}
-
-String removeJsonBlock(String text) {
-  return text.replaceAll(RegExp(r'```json[\s\S]*?```', multiLine: true), '').trim();
-}
-
-bool isValidGeminiSummary(Map<String, dynamic> summary) {
-  final category = summary['serviceCategory'] ?? summary['service_category'] ?? '';
-  final type = summary['serviceType'] ?? summary['service_type'] ?? '';
-  if (!allowedCategories.containsKey(category)) return false;
-  if (!allowedCategories[category]!.contains(type)) return false;
-  return true;
 }
