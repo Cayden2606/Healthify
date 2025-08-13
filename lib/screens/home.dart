@@ -10,8 +10,8 @@ import 'package:healthify/widgets/home/upcoming_schedule_card.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../main.dart';
-import '../utilities/status_bar_utils.dart';
+import 'package:healthify/main.dart';
+import 'package:healthify/utilities/status_bar_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

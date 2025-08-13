@@ -94,7 +94,6 @@ class _MakeAppointmentsScreenState extends State<MakeAppointmentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final appointment = widget.appointment;
 
     final titleText = appointment == null

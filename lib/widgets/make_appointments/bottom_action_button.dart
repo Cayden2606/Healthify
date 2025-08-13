@@ -7,7 +7,7 @@ import 'package:healthify/screens/home.dart' as home_screen;
 import 'package:healthify/utilities/firebase_calls.dart';
 import 'package:resend/resend.dart';
 
-import '../../models/appointment.dart';
+import 'package:healthify/models/appointment.dart';
 
 enum EmailKind { booked, updated, cancelled }
 

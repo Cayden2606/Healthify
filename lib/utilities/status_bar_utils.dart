@@ -27,21 +27,6 @@ class StatusBarUtils {
       statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
     );
   }
-  //
-  // static void setCustomStatusBar(BuildContext context,
-  //     {Color? backgroundColor}) {
-  //   final theme = Theme.of(context);
-  //   final isDarkMode = theme.brightness == Brightness.dark;
-  //
-  //   SystemChrome.setSystemUIOverlayStyle(
-  //     SystemUiOverlayStyle(
-  //       statusBarColor: backgroundColor ?? Colors.transparent,
-  //       statusBarIconBrightness:
-  //           isDarkMode ? Brightness.light : Brightness.dark,
-  //       statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
-  //     ),
-  //   );
-  // }
 
   static SystemUiOverlayStyle getStatusBarStyle(BuildContext context) {
     final theme = Theme.of(context);
