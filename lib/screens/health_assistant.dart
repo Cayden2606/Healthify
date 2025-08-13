@@ -88,7 +88,7 @@ class _HealthAssistantState extends State<HealthAssistant> {
 
   @override
   void initState() {
-    super.initState();
+    super.initState();    
 
     // If a shortcut query was provided, send it automatically (hidden from user)
     if (widget.shortCutQuery != null && widget.shortCutQuery!.isNotEmpty) {
@@ -102,12 +102,6 @@ class _HealthAssistantState extends State<HealthAssistant> {
             isShortcut: true); // Pass flag to indicate it's a shortcut
       });
     }
-
-    messages.clear();
-    geminiAppointment = null;
-    userBookAppointmentIntent = false;
-    showBookButton = false;
-    initGreetings = true;
   }
 
   String _getGreeting() {
@@ -606,11 +600,16 @@ ${json.encode(allowedCategories)}
       final userPrompt = "# userprompt\n${chatMessage.text}";
 
       // Combine all parts into the final prompt for the model
-      final enhancedPrompt = [
-        systemPrompt,
-        historyForPrompt,
-        userPrompt
-      ].join('\n\n');
+      final enhancedPrompt;
+      if (!isShortcut) {
+        enhancedPrompt = [
+          systemPrompt,
+          historyForPrompt,
+          userPrompt
+        ].join('\n\n');
+      } else {
+        enhancedPrompt = userPrompt;
+      }
 
       // --- End: Build Conversational History ---
 
