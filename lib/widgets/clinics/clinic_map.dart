@@ -29,17 +29,8 @@ class ClinicMap extends StatelessWidget {
         ),
       ),
       children: [
-        // TileLayer(
-        //   urlTemplate:
-        //       'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        //   subdomains: const ['a', 'b', 'c', 'd'],
-        //   userAgentPackageName: 'com.example.healthify',
-        // ),
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          // urlTemplate:
-          //     'https://tiles.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-
           userAgentPackageName: 'com.example.healthify',
         ),
         if (_currentLocation != null)

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:healthify/models/appointment.dart';
-import 'package:healthify/models/appointment_data.dart';
 import 'package:healthify/screens/make_appointments_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../screens/clinics_screen.dart';
+import 'package:healthify/screens/clinics_screen.dart';
 
 class AppointmentCard extends StatelessWidget {
   const AppointmentCard({
