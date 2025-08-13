@@ -102,6 +102,12 @@ class _HealthAssistantState extends State<HealthAssistant> {
             isShortcut: true); // Pass flag to indicate it's a shortcut
       });
     }
+
+    messages.clear();
+    geminiAppointment = null;
+    userBookAppointmentIntent = false;
+    showBookButton = false;
+    initGreetings = true;
   }
 
   String _getGreeting() {
