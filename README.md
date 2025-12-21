@@ -77,7 +77,7 @@ Your health and wellness journey starts here. Healthify is a comprehensive Flutt
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/Healthify.git
+   git clone https://github.com/Shockz132/Healthify
    cd Healthify
    ```
 
@@ -127,11 +127,11 @@ The health assistant uses Google Gemini to provide intelligent health guidance:
 
 ### Location Services
 - Real-time GPS tracking
-- Distance calculation using Haversine formula
+- Distance calculation using the Haversine formula
 - Nearest clinic detection
 - Interactive map integration
 
 ### Appointment Booking
-- AI-powered service categorization
+- AI-powered service categorisation
 - Integration with clinic availability
 - Smart appointment suggestions based on user needs
