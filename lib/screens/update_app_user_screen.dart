@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
@@ -30,8 +31,8 @@ class _UpdateAppUserScreenState extends State<UpdateAppUserScreen> {
   TextEditingController genderController = TextEditingController();
 
   // Cloudinary stuff
-  final String cloudName = 'dv7xjn1wg';
-  final String uploadPreset = 'healthify_pfp';
+  final String cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
+  final String uploadPreset = dotenv.env['CLOUDINARY_UPLOAD_PRESET'] ?? '';
   File? tempImage;
   bool removePic = false;
 
