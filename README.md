@@ -271,6 +271,8 @@ The health assistant leverages Google Gemini 2.0 Flash for intelligent health gu
 <p align="center">
   <img src="screenshots/loginscreen.PNG" alt="Login" width="200">
   <img src="screenshots/HomeScreen.PNG" alt="Home" width="200">
+  <img src="screenshots/lightpurpleHome.PNG" alt="Home Light Purple Theme" width="200">
+  <img src="screenshots/DarkRedishHome.PNG" alt="Home Dark Reddish Theme" width="200">
 </p>
 
 ### AI Health Assistant
@@ -281,8 +283,10 @@ The health assistant leverages Google Gemini 2.0 Flash for intelligent health gu
 
 ### Clinic Discovery
 <p align="center">
-  <img src="screenshots/NearbyClinicsMap.png" alt="Clinics Map" width="200">
-  <img src="screenshots/ClinicMapDetials.PNG" alt="Clinic Details" width="200">
+  <img src="screenshots/ClinicMapRegions.PNG" alt="Regions" width="200">
+  <img src="screenshots/ClinicsMapNearby.png" alt="Nearby" width="200">
+  <img src="screenshots/ClinicMapSaved.PNG" alt="Saved" width="200">
+  <img src="screenshots/ClinicMapOpen.PNG" alt="Open" width="200">
 </p>
 
 ### Appointment Booking
@@ -296,6 +300,8 @@ The health assistant leverages Google Gemini 2.0 Flash for intelligent health gu
 ### Appointments Management
 <p align="center">
   <img src="screenshots/UpcomingAppointment.png" alt="Upcoming" width="200">
+  <img src="screenshots/ViewLocationOfAppointmentOnGoogleMapsOrHealthify.PNG" alt="Location" width="200">
+  <img src="screenshots/EditUpcommingAppointment.PNG" alt="Edit Appointment" width="200">
   <img src="screenshots/PassedAppointment.png" alt="Passed" width="200">
   <img src="screenshots/EmailNotficationResend.png" alt="Email Notification" width="200">
 </p>
