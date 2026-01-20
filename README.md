@@ -37,7 +37,7 @@ Your health and wellness journey starts here. Healthify is a comprehensive Flutt
 - **Search Options**:
   - By Region (Central, Northwest, Southwest, Northeast, Southeast)
   - By Distance (5km radius from current location)
-  - Saved Clinics (personal favorites)
+  - Saved Clinics (personal favourites)
   - Open Status (currently operating clinics)
 - **Real-time GPS**: Accurate location services with Geolocator
 - **Opening Hours Parser**: Intelligent parsing of OSM opening hours format
@@ -50,8 +50,8 @@ Your health and wellness journey starts here. Healthify is a comprehensive Flutt
 - **International Phone Input**: Country code selector with validation
 - **Theme Customization**: 
   - Dark/Light mode toggle with persistence
-  - 15+ color palette options for theme personalization
-- **Language Support**: English, 中文, Bahasa Melayu, தமிழ் (UI prepared)
+  - 15+ colour palette options for theme personalisation
+- **Language Support**: English (currently supported)
 - **Firebase Sync**: All preferences stored and synced across devices
 
 ### 🚶 Health Tracking
