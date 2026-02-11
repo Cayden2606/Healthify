@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "266306274885",
+    "project_id": "fir-flutter-32f68",
+    "storage_bucket": "fir-flutter-32f68.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:266306274885:android:da4896547e497397bac52c",
+        "android_client_info": {
+          "package_name": "com.example.firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcPWNZxJnAwD7UWxyK4yYngCu0fbqSTTo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:266306274885:android:84402ac9aca4f5a3bac52c",
+        "android_client_info": {
+          "package_name": "com.example.healthify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcPWNZxJnAwD7UWxyK4yYngCu0fbqSTTo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
