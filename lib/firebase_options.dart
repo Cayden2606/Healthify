@@ -70,6 +70,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '266306274885',
     projectId: 'fir-flutter-32f68',
     storageBucket: 'fir-flutter-32f68.firebasestorage.app',
-    iosBundleId: 'com.caydenmtheseira.healthify',
+    iosBundleId: 'com.example.healthify',
   );
 }

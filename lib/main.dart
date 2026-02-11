@@ -21,31 +21,18 @@ import 'package:healthify/screens/onboarding_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e) {
-    debugPrint('Firebase init failed: $e');
-  }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    debugPrint('dotenv load failed: $e');
-  }
+  await dotenv.load(fileName: ".env");
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  final geminiApiKey = dotenv.env['GEMINI_API_KEY'];
-  if (geminiApiKey == null || geminiApiKey.isEmpty) {
-    debugPrint('GEMINI_API_KEY missing; Gemini disabled.');
-  } else {
-    Gemini.init(apiKey: geminiApiKey);
-  }
+  Gemini.init(apiKey: dotenv.env['GEMINI_API_KEY']!);
 
   runApp(const MyApp());
 }
