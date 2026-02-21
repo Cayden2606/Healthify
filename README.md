@@ -175,8 +175,34 @@ resend: ^1.0.0                  # Email sending
      - `clinics` - Cached clinic data
    - Download and configure `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
 
-5. **Run the application**
+5. **iOS-Specific Configuration**
+   
+   **Location Permissions:**
+   The app requires location access for finding nearby clinics. These are already configured in `ios/Runner/Info.plist`:
+   - `NSLocationWhenInUseUsageDescription`
+   - `NSLocationAlwaysAndWhenInUseUsageDescription`
+
+   **CocoaPods Setup:**
    ```bash
+   cd ios
+   pod install
+   cd ..
+   ```
+   
+   **Requirements:**
+   - Xcode 14.0 or higher
+   - iOS 13.0 or higher
+   - CocoaPods installed (`sudo gem install cocoapods`)
+
+6. **Run the application**
+   ```bash
+   # iOS Simulator
+   flutter run -d simulator
+   
+   # Physical iOS Device (release mode - lasts 7 days)
+   flutter run -d <device-id> --release
+   
+   # Android
    flutter run
    ```
 
